@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conversor SVG para Gesture</title>
+    <title>Conversor SVG Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -17,99 +17,132 @@
                 linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        #svgContainer {
-            position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none;
-        }
+        #svgContainer { position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none; }
+        
+        /* Scrollbar customizada para as camadas */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px;}
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-8">
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-6 overflow-x-hidden">
 
-    <div class="max-w-6xl mx-auto space-y-6">
-        <header class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-full mb-2">
-                <i data-lucide="check-circle" class="w-8 h-8 text-emerald-600"></i>
+    <div class="max-w-7xl mx-auto space-y-6">
+        <header class="flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-indigo-100 rounded-xl">
+                    <i data-lucide="layers" class="w-8 h-8 text-indigo-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">Conversor SVG Studio</h1>
+                    <p class="text-xs text-gray-500 font-medium">Camadas, Geometria e Animação HSL</p>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900">Conversor SVG Absoluto</h1>
-            <p class="text-gray-500">Mandalas perfeitas com Zoom, Exportação Inteligente e Otimização</p>
+            
+            <div class="flex items-center gap-3 mt-4 md:mt-0">
+                <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-amber-50 rounded-lg border border-amber-100" title="Acelera a geração do Auto.js">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-600 mr-2"></i>
+                    <span class="text-xs font-medium text-amber-700 mr-2">Modo Turbo</span>
+                    <input type="checkbox" id="turboMode" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-emerald-50 rounded-lg border border-emerald-100" title="Une linhas muito próximas num único traço">
+                    <i data-lucide="git-merge" class="w-4 h-4 text-emerald-600 mr-2"></i>
+                    <span class="text-xs font-medium text-emerald-700 mr-2">Traço Contínuo</span>
+                    <input type="checkbox" id="continuousLine" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer">
+                </label>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Painel Esquerdo -->
-            <div class="space-y-6 lg:col-span-1">
+            <!-- COLUNA 1: UPLOAD & GEOMETRIA -->
+            <div class="lg:col-span-3 space-y-4">
                 <!-- Upload -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-500"></i>
                         Ficheiro SVG
                     </h2>
                     
-                    <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:bg-gray-50 relative">
+                    <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50 relative">
                         <input type="file" id="fileInput" accept="*/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         <i data-lucide="image" class="w-10 h-10 text-gray-400 mx-auto mb-3"></i>
-                        <p class="text-sm text-gray-600 font-medium break-all px-2" id="uploadText">Clique para abrir os Arquivos</p>
+                        <p class="text-sm text-gray-600 font-bold break-all px-2" id="uploadText">Abrir SVG</p>
                         <p class="text-xs text-gray-400 mt-1">Selecione o seu ficheiro .svg</p>
                     </div>
                     
-                    <div id="progressContainer" class="mt-4 hidden">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-indigo-600 font-medium" id="statusMsg">A calcular trajetórias...</span>
+                    <div id="progressContainer" class="mt-3 hidden">
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-indigo-600 font-medium" id="statusMsg">Processando...</span>
                             <span class="text-indigo-600 font-bold" id="progressText">0%</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div id="progressBar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-75" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Configurações -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-5 h-5 text-indigo-500"></i>
-                        Controlo Total
+                <!-- Geometria & Tela -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 text-xs font-medium text-gray-600">
+                    <h2 class="text-sm font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3 flex justify-between items-center">
+                        Geometria & Tela
+                        <button id="resetGeoBtn" class="text-indigo-500 hover:text-indigo-700 flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset</button>
                     </h2>
                     
-                    <div class="space-y-5 text-sm">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1">
-                                    Largura (X)
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            A largura exata do ecrã onde o Auto.js vai desenhar.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="number" id="screenW" value="1100" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1">
-                                    Altura (Y)
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            A altura exata do ecrã onde o Auto.js vai desenhar.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="number" id="screenH" value="2442" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                        </div>
-
+                    <!-- Resolução -->
+                    <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="flex items-center">
-                                    Ocupação do Ecrã
-                                </span>
-                                <span id="percentValue" class="text-indigo-600 font-semibold">70%</span>
-                            </label>
-                            <input type="range" id="drawPercent" min="10" max="95" value="70" class="w-full accent-indigo-600">
+                            <label class="block mb-1">Ecrã X</label>
+                            <input type="number" id="screenW" value="1100" class="w-full bg-gray-50 border border-gray-200 rounded p-1.5 outline-none focus:border-indigo-500">
                         </div>
+                        <div>
+                            <label class="block mb-1">Ecrã Y</label>
+                            <input type="number" id="screenH" value="2442" class="w-full bg-gray-50 border border-gray-200 rounded p-1.5 outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
 
-                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                    <!-- Escala & Margem -->
+                    <div class="space-y-3 pt-2 border-t border-gray-100">
+                        <div>
+                            <label class="flex justify-between mb-1"><span>Ocupação Total</span><span id="percentValue" class="text-indigo-600">70%</span></label>
+                            <input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full accent-indigo-500 h-1.5">
+                        </div>
+                        <div>
+                            <label class="flex justify-between mb-1"><span>Margem de Segurança</span><span id="marginValue" class="text-indigo-600">20px</span></label>
+                            <input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full accent-indigo-500 h-1.5">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block mb-1">Escala Largura</label>
+                                <input type="number" id="scaleX" value="1.0" step="0.1" class="w-full bg-gray-50 border border-gray-200 rounded p-1 outline-none">
+                            </div>
+                            <div>
+                                <label class="block mb-1">Escala Altura</label>
+                                <input type="number" id="scaleY" value="1.0" step="0.1" class="w-full bg-gray-50 border border-gray-200 rounded p-1 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rotação & Espelhamento -->
+                    <div class="space-y-3 pt-2 border-t border-gray-100">
+                        <div>
+                            <label class="flex justify-between mb-1"><span>Rotação</span><span id="rotationValue" class="text-indigo-600">0°</span></label>
+                            <input type="range" id="rotation" min="0" max="360" value="0" class="w-full accent-indigo-500 h-1.5">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="flipXBtn" class="flex-1 py-1.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded flex items-center justify-center gap-1 transition-colors data-[active=true]:bg-indigo-500 data-[active=true]:text-white">
+                                <i data-lucide="flip-horizontal" class="w-4 h-4"></i> Espelhar X
+                            </button>
+                            <button id="flipYBtn" class="flex-1 py-1.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded flex items-center justify-center gap-1 transition-colors data-[active=true]:bg-indigo-500 data-[active=true]:text-white">
+                                <i data-lucide="flip-vertical" class="w-4 h-4"></i> Espelhar Y
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Motor Robô -->
+                    <div class="space-y-3 pt-2 border-t border-gray-100">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="flex items-center text-gray-600 mb-1 text-xs">Mover Esq/Dir</label>
                                 <input type="range" id="posX" min="0" max="100" value="50" class="w-full accent-indigo-500">
@@ -120,24 +153,9 @@
                             </div>
                         </div>
 
-                        <!-- Velocidade Dinâmica -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="font-medium text-purple-700 flex items-center">Velocidade do Robô</span>
-                                <span id="speedValue" class="text-purple-600 font-bold text-xs bg-purple-50 px-2 py-0.5 rounded">2.0x (Rápido)</span>
-                            </label>
-                            <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full accent-purple-500">
-                        </div>
-                        
-                        <!-- Modo Turbo Android -->
-                        <div class="pt-1">
-                            <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-amber-50 rounded-lg border border-amber-100">
-                                <span class="font-medium text-amber-700 flex items-center">
-                                    <i data-lucide="zap" class="w-4 h-4 mr-1"></i>
-                                    Modo Turbo (Rápido)
-                                </span>
-                                <input type="checkbox" id="turboMode" class="w-5 h-5 accent-amber-600 rounded cursor-pointer">
-                            </label>
+                        <div>
+                            <label class="flex justify-between mb-1"><span class="text-purple-600">Velocidade Robô</span><span id="speedValue">2.0x</span></label>
+                            <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full accent-purple-500 h-1.5">
                         </div>
                         
                         <!-- Manter Ecrã Ligado (WakeLock) -->
@@ -146,111 +164,107 @@
                                 <span class="font-medium text-blue-700 flex items-center text-xs">
                                     <i data-lucide="sun" class="w-4 h-4 mr-1"></i>
                                     Manter Ecrã Ligado
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-blue-400 hover:text-blue-600"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            Tenta manter o ecrã aceso durante a conversão. Note: Pode ser bloqueado por restrições do navegador/plataforma.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
                                 </span>
                                 <input type="checkbox" id="wakeLockMode" checked class="w-5 h-5 accent-blue-600 rounded cursor-pointer">
                             </label>
                         </div>
 
                         <!-- Aprimorador de Tempo (Pausa) -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="font-medium text-pink-700 flex items-center">Pausa ao Levantar Dedo</span>
-                                <span id="pauseValue" class="text-pink-600 font-bold text-xs bg-pink-50 px-2 py-0.5 rounded">15ms</span>
-                            </label>
-                            <input type="range" id="drawPause" min="1" max="500" step="1" value="15" class="w-full accent-pink-500">
+                        <div class="pt-1">
+                            <label class="flex justify-between mb-1"><span class="text-pink-700">Pausa ao Levantar Dedo</span><span id="pauseValue" class="text-pink-600 font-bold text-xs bg-pink-50 px-2 py-0.5 rounded">15ms</span></label>
+                            <input type="range" id="drawPause" min="1" max="500" step="1" value="15" class="w-full accent-pink-500 h-1.5">
                         </div>
 
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="flex items-center">Precisão dos Pontos</span>
-                                <span id="precisionValue" class="text-gray-500">10px</span>
-                            </label>
-                            <input type="range" id="stepPrecision" min="2" max="30" value="10" class="w-full accent-gray-500">
+                        <div>
+                            <label class="flex justify-between mb-1"><span>Precisão Pontos</span><span id="precisionValue">10px</span></label>
+                            <input type="range" id="stepPrecision" min="2" max="30" value="10" class="w-full accent-gray-500 h-1.5">
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <!-- Painel Central e Direito -->
-            <div class="lg:col-span-2 space-y-6 flex flex-col">
+            <!-- COLUNA 2: CAMADAS & PREVIEW -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
                 
-                <!-- Preview Canvas com Zoom -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="search" class="w-5 h-5 text-indigo-500"></i>
-                        Preview do Trajeto (Use o Zoom e Arraste)
-                    </h2>
+                <!-- Gestor de Camadas -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                            <i data-lucide="list-tree" class="w-4 h-4 text-indigo-500"></i> Camadas
+                        </h2>
+                        <button id="mergeBtn" class="text-xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 transition-colors flex items-center gap-1 disabled:opacity-50">
+                            <i data-lucide="combine" class="w-3 h-3"></i> Mesclar Selecionadas
+                        </button>
+                    </div>
                     
-                    <div id="canvasWrapper" class="flex-1 bg-gray-100 rounded-xl overflow-hidden relative min-h-[400px]">
-                        <!-- Canvas interativo -->
+                    <!-- Cabeçalho da Tabela -->
+                    <div class="grid grid-cols-12 gap-2 px-2 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                        <div class="col-span-1 text-center">Sel</div>
+                        <div class="col-span-6">Nome da Camada</div>
+                        <div class="col-span-3 text-center">Delay (s)</div>
+                        <div class="col-span-2 text-center">Ordem</div>
+                    </div>
+
+                    <!-- Lista de Camadas -->
+                    <div id="layersList" class="flex-1 overflow-y-auto custom-scrollbar pt-2 space-y-1">
+                        <div class="text-center text-xs text-gray-400 mt-10">Faça upload de um SVG para ver as camadas.</div>
+                    </div>
+                </div>
+
+                <!-- Preview Animado -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex-1 flex flex-col relative min-h-[300px]">
+                    <div class="flex justify-between items-center mb-3 absolute top-6 left-6 right-6 z-10 pointer-events-none">
+                        <div class="flex gap-2 pointer-events-auto">
+                            <button id="playBtn" class="p-2 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition flex items-center gap-1 text-xs font-bold disabled:opacity-50">
+                                <i data-lucide="play" class="w-4 h-4"></i> Animar
+                            </button>
+                            <button id="stopBtn" class="p-2 bg-rose-500 text-white rounded-lg shadow hover:bg-rose-600 transition hidden flex items-center gap-1 text-xs font-bold">
+                                <i data-lucide="square" class="w-4 h-4"></i> Parar
+                            </button>
+                        </div>
+                        <div class="flex gap-1 flex-col pointer-events-auto">
+                            <button id="zoomInBtn" class="bg-white/90 p-1.5 rounded shadow text-gray-700 hover:text-indigo-600"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                            <button id="zoomResetBtn" class="bg-white/90 p-1.5 rounded shadow text-gray-700 hover:text-indigo-600"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                            <button id="zoomOutBtn" class="bg-white/90 p-1.5 rounded shadow text-gray-700 hover:text-indigo-600"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div id="canvasWrapper" class="flex-1 rounded-xl overflow-hidden relative border border-gray-800">
                         <canvas id="previewCanvas" class="w-full h-full cursor-grab active:cursor-grabbing absolute inset-0 touch-none"></canvas>
-                        
                         <div id="noPreviewMsg" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm pointer-events-none">
                             Faça upload do SVG
                         </div>
-
-                        <!-- Botões de Zoom -->
-                        <div class="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
-                            <button id="zoomInBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Aumentar Zoom">
-                                <i data-lucide="zoom-in" class="w-5 h-5"></i>
-                            </button>
-                            <button id="zoomResetBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Centrar Imagem">
-                                <i data-lucide="maximize" class="w-5 h-5"></i>
-                            </button>
-                            <button id="zoomOutBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Diminuir Zoom">
-                                <i data-lucide="zoom-out" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3">
-                        <div class="flex items-center gap-1">
-                            <span class="w-3 h-1 bg-[#10b981] inline-block rounded-sm"></span><span class="font-medium">Traço Ímpar</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="w-3 h-1 bg-[#a855f7] inline-block rounded-sm"></span><span class="font-medium">Traço Par</span>
-                        </div>
                     </div>
 
-                    <div class="mt-3 text-center text-xs text-gray-500 font-mono bg-gray-50 p-3 rounded-lg" id="statsDisplay">
-                        Aguardando leitura de ficheiro...
+                    <!-- Legenda de Cores -->
+                    <div class="mt-3 flex items-center justify-between text-[10px] font-medium text-gray-500">
+                        <span>Fundo (Claro)</span>
+                        <div class="flex-1 mx-2 h-2 rounded-full" style="background: linear-gradient(to right, hsl(280, 80%, 80%), hsl(280, 80%, 30%))"></div>
+                        <span>Topo (Escuro)</span>
                     </div>
                 </div>
 
-                <!-- Código Gerado -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                        <h2 class="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
-                            <i data-lucide="code-2" class="w-5 h-5 text-indigo-500"></i>
-                            Auto.js Code
-                        </h2>
-                        
-                        <!-- Nome do Ficheiro Dinâmico -->
-                        <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200 px-2 py-1 w-full md:w-auto">
-                            <span class="text-xs text-gray-500 mr-2 whitespace-nowrap"><i data-lucide="file-code" class="w-4 h-4 inline"></i> Nome:</span>
-                            <input type="text" id="jsFileName" value="mandala" class="bg-transparent border-none text-sm outline-none text-indigo-700 font-medium w-full min-w-[100px]">
-                            <span class="text-xs text-gray-500 font-mono">.js</span>
-                        </div>
-                        
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <button id="saveBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed">
-                                <i data-lucide="download" class="w-4 h-4"></i> Guardar
-                            </button>
-                            <button id="copyBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed">
-                                <i data-lucide="copy" class="w-4 h-4"></i> Copiar
-                            </button>
-                        </div>
+            </div>
+
+            <!-- COLUNA 3: CÓDIGO -->
+            <div class="lg:col-span-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[85vh] lg:h-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold flex items-center gap-2 text-indigo-600">
+                        <i data-lucide="file-json" class="w-4 h-4"></i> Auto.js (JSON Structure)
+                    </h2>
+                    <div class="flex gap-2">
+                        <button id="saveBtn" class="p-1.5 bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded transition" title="Guardar .js"><i data-lucide="download" class="w-4 h-4"></i></button>
+                        <button id="copyBtn" class="p-1.5 bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded transition" title="Copiar"><i data-lucide="copy" class="w-4 h-4"></i></button>
                     </div>
-                    
-                    <textarea id="outputCode" readonly placeholder="// O código aparecerá aqui..." class="flex-1 w-full bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-xl border-none outline-none resize-none whitespace-pre overflow-x-auto focus:ring-2 focus:ring-indigo-500 min-h-[250px]"></textarea>
                 </div>
+                <div class="mb-2 flex items-center bg-gray-50 rounded border border-gray-200 px-2 py-1">
+                    <span class="text-[10px] text-gray-500 mr-2 whitespace-nowrap">Nome:</span>
+                    <input type="text" id="jsFileName" value="mandala_layers" class="w-full text-xs font-mono bg-transparent border-none outline-none text-indigo-700">
+                    <span class="text-[10px] text-gray-500 font-mono">.js</span>
+                </div>
+                <textarea id="outputCode" readonly placeholder="// Código gerado dinamicamente..." class="flex-1 w-full bg-[#0d1117] text-[#56d364] font-mono text-[10px] p-4 rounded-xl border border-gray-800 outline-none resize-none whitespace-pre overflow-x-auto focus:ring-1 focus:ring-indigo-500 custom-scrollbar"></textarea>
+                <div class="mt-2 text-center text-[10px] text-gray-400 font-mono" id="statsDisplay">Pronto</div>
             </div>
 
         </div>
@@ -261,55 +275,83 @@
     <script>
         lucide.createIcons();
 
-        // Variáveis de Estado
-        let finalPathsData = null; 
-        let globalScaledPaths = null;
-        let originalSvgBounds = null; 
-        let isProcessing = false;
-        let currentSvgContent = null;
-        let wakeLock = null; 
+        // ==========================================
+        // ESTADO GLOBAL DA APLICAÇÃO
+        // ==========================================
+        let rawLayers = []; 
+        let scaledLayers = []; 
         
-        // Estado do Zoom e Pan
+        // Transformações
+        let isFlipX = false;
+        let isFlipY = false;
+
+        // Estado do Canvas/Animação
         let viewScale = 1.0;
         let viewOffsetX = 0;
         let viewOffsetY = 0;
         let isDraggingCanvas = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
+        let dragStartX = 0; let dragStartY = 0;
+        let animReqId = null;
+        let isAnimating = false;
 
-        // Elementos DOM
-        const fileInput = document.getElementById('fileInput');
-        const jsFileName = document.getElementById('jsFileName');
-        const drawPercent = document.getElementById('drawPercent');
-        const percentValue = document.getElementById('percentValue');
-        const drawSpeed = document.getElementById('drawSpeed');
-        const speedValue = document.getElementById('speedValue');
-        const drawPause = document.getElementById('drawPause');
-        const pauseValue = document.getElementById('pauseValue');
-        const posXInput = document.getElementById('posX');
-        const posYInput = document.getElementById('posY');
-        const stepPrecision = document.getElementById('stepPrecision');
-        const precisionValue = document.getElementById('precisionValue');
-        const turboMode = document.getElementById('turboMode');
-        const wakeLockMode = document.getElementById('wakeLockMode');
-        const canvasWrapper = document.getElementById('canvasWrapper');
-        const canvas = document.getElementById('previewCanvas');
-        const ctx = canvas.getContext('2d');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const statusMsg = document.getElementById('statusMsg');
+        let isProcessing = false;
+        let currentSvgContent = null;
+        let wakeLock = null; // WakeLock Control
+
+        // Elementos DOM Centralizados
+        const els = {
+            fileInput: document.getElementById('fileInput'),
+            uploadText: document.getElementById('uploadText'),
+            screenW: document.getElementById('screenW'),
+            screenH: document.getElementById('screenH'),
+            drawPercent: document.getElementById('drawPercent'),
+            percentValue: document.getElementById('percentValue'),
+            drawMargin: document.getElementById('drawMargin'),
+            marginValue: document.getElementById('marginValue'),
+            scaleX: document.getElementById('scaleX'),
+            scaleY: document.getElementById('scaleY'),
+            rotation: document.getElementById('rotation'),
+            rotationValue: document.getElementById('rotationValue'),
+            flipXBtn: document.getElementById('flipXBtn'),
+            flipYBtn: document.getElementById('flipYBtn'),
+            resetGeoBtn: document.getElementById('resetGeoBtn'),
+            drawSpeed: document.getElementById('drawSpeed'),
+            speedValue: document.getElementById('speedValue'),
+            stepPrecision: document.getElementById('stepPrecision'),
+            precisionValue: document.getElementById('precisionValue'),
+            turboMode: document.getElementById('turboMode'),
+            continuousLine: document.getElementById('continuousLine'),
+            layersList: document.getElementById('layersList'),
+            mergeBtn: document.getElementById('mergeBtn'),
+            canvas: document.getElementById('previewCanvas'),
+            canvasWrapper: document.getElementById('canvasWrapper'),
+            playBtn: document.getElementById('playBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            outputCode: document.getElementById('outputCode'),
+            statsDisplay: document.getElementById('statsDisplay'),
+            progContainer: document.getElementById('progressContainer'),
+            progBar: document.getElementById('progressBar'),
+            progText: document.getElementById('progressText'),
+            statusMsg: document.getElementById('statusMsg'),
+            drawPause: document.getElementById('drawPause'),
+            pauseValue: document.getElementById('pauseValue'),
+            posXInput: document.getElementById('posX'),
+            posYInput: document.getElementById('posY'),
+            wakeLockMode: document.getElementById('wakeLockMode'),
+            jsFileName: document.getElementById('jsFileName')
+        };
+
+        const ctx = els.canvas.getContext('2d');
 
         // --- SISTEMA WAKELOCK (Correção para permissões bloqueadas) ---
         async function requestWakeLock() {
-            if (!('wakeLock' in navigator) || !wakeLockMode.checked) return;
+            if (!('wakeLock' in navigator) || !els.wakeLockMode.checked) return;
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
             } catch (err) {
-                // Silenciamos os erros de console para evitar alertas no sistema.
-                // Se a permissão for negada (comum em iframes/previews), apenas desativamos a opção visualmente.
-                wakeLockMode.checked = false;
-                wakeLockMode.disabled = true;
+                // Silencia erros, apenas desativa a opção caso seja negado pelo browser.
+                els.wakeLockMode.checked = false;
+                els.wakeLockMode.disabled = true;
             }
         }
 
@@ -322,53 +364,102 @@
         }
 
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && wakeLockMode.checked) {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && els.wakeLockMode.checked) {
                 await requestWakeLock();
             }
         });
 
-        // Event Listeners UI
-        drawPercent.addEventListener('input', (e) => { percentValue.textContent = `${e.target.value}%`; if (finalPathsData) updateScaleAndCode(); });
-        drawSpeed.addEventListener('input', (e) => { speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`; if (finalPathsData) updateScaleAndCode(); });
-        drawPause.addEventListener('input', (e) => { pauseValue.textContent = `${e.target.value}ms`; if (finalPathsData) updateScaleAndCode(); });
-        posXInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
-        posYInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
-        turboMode.addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
-        document.getElementById('screenW').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
-        document.getElementById('screenH').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
-        stepPrecision.addEventListener('input', (e) => { precisionValue.textContent = `${e.target.value}px`; });
-        stepPrecision.addEventListener('change', () => { if (currentSvgContent) processSVGasnc(currentSvgContent); });
+        // ==========================================
+        // EVENT LISTENERS BÁSICOS
+        // ==========================================
+        els.drawPercent.addEventListener('input', (e) => { els.percentValue.textContent = `${e.target.value}%`; triggerUpdate(); });
+        els.drawMargin.addEventListener('input', (e) => { els.marginValue.textContent = `${e.target.value}px`; triggerUpdate(); });
+        els.drawSpeed.addEventListener('input', (e) => { els.speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`; triggerCodeUpdate(); });
+        els.drawPause.addEventListener('input', (e) => { els.pauseValue.textContent = `${e.target.value}ms`; triggerCodeUpdate(); });
+        els.rotation.addEventListener('input', (e) => { els.rotationValue.textContent = `${e.target.value}°`; triggerUpdate(); });
+        els.scaleX.addEventListener('change', triggerUpdate);
+        els.scaleY.addEventListener('change', triggerUpdate);
+        els.screenW.addEventListener('change', triggerUpdate);
+        els.screenH.addEventListener('change', triggerUpdate);
+        els.posXInput.addEventListener('input', triggerUpdate);
+        els.posYInput.addEventListener('input', triggerUpdate);
+        els.turboMode.addEventListener('change', triggerCodeUpdate);
+        
+        els.stepPrecision.addEventListener('input', (e) => els.precisionValue.textContent = `${e.target.value}px`);
+        els.stepPrecision.addEventListener('change', reprocessSVG);
+        els.continuousLine.addEventListener('change', reprocessSVG);
 
-        // Zoom e Pan
-        function resetZoom() { viewScale = 1.0; viewOffsetX = 0; viewOffsetY = 0; if(globalScaledPaths) drawInteractivePreview(); }
-        document.getElementById('zoomInBtn').addEventListener('click', () => { viewScale *= 1.3; drawInteractivePreview(); });
-        document.getElementById('zoomOutBtn').addEventListener('click', () => { viewScale /= 1.3; drawInteractivePreview(); });
-        document.getElementById('zoomResetBtn').addEventListener('click', resetZoom);
-        canvas.addEventListener('wheel', (e) => { e.preventDefault(); if (e.deltaY < 0) viewScale *= 1.1; else viewScale /= 1.1; drawInteractivePreview(); }, { passive: false });
-
-        const getPos = (e) => {
-            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            return { x: e.clientX, y: e.clientY };
+        els.flipXBtn.onclick = () => { isFlipX = !isFlipX; els.flipXBtn.dataset.active = isFlipX; triggerUpdate(); };
+        els.flipYBtn.onclick = () => { isFlipY = !isFlipY; els.flipYBtn.dataset.active = isFlipY; triggerUpdate(); };
+        
+        els.resetGeoBtn.onclick = () => {
+            els.scaleX.value = 1.0; els.scaleY.value = 1.0; 
+            els.rotation.value = 0; els.rotationValue.textContent = "0°";
+            els.posXInput.value = 50; els.posYInput.value = 50;
+            isFlipX = false; els.flipXBtn.dataset.active = false;
+            isFlipY = false; els.flipYBtn.dataset.active = false;
+            triggerUpdate();
         };
-        const startPan = (e) => { if(!globalScaledPaths) return; isDraggingCanvas = true; const pos = getPos(e); dragStartX = pos.x - viewOffsetX; dragStartY = pos.y - viewOffsetY; canvas.classList.replace('cursor-grab', 'cursor-grabbing'); };
-        const movePan = (e) => { if (!isDraggingCanvas) return; e.preventDefault(); const pos = getPos(e); viewOffsetX = pos.x - dragStartX; viewOffsetY = pos.y - dragStartY; drawInteractivePreview(); };
-        const endPan = () => { isDraggingCanvas = false; canvas.classList.replace('cursor-grabbing', 'cursor-grab'); };
-        canvas.addEventListener('mousedown', startPan);
-        canvas.addEventListener('mousemove', movePan);
-        canvas.addEventListener('mouseup', endPan);
-        canvas.addEventListener('mouseleave', endPan);
-        canvas.addEventListener('touchstart', startPan, { passive: false });
-        canvas.addEventListener('touchmove', movePan, { passive: false });
-        canvas.addEventListener('touchend', endPan);
-        window.addEventListener('resize', () => { if(globalScaledPaths) drawInteractivePreview(); });
 
-        // Processamento
-        fileInput.addEventListener('change', function() {
+        function triggerUpdate() {
+            if (rawLayers.length > 0) updateGeometryAndScale();
+        }
+        function triggerCodeUpdate() {
+            if (scaledLayers.length > 0) generateCode();
+        }
+        function reprocessSVG() {
+            if (currentSvgContent) processSVGasnc(currentSvgContent);
+        }
+
+        // ==========================================
+        // ZOOM & PAN CANVAS
+        // ==========================================
+        function resetZoom() { viewScale = 1.0; viewOffsetX = 0; viewOffsetY = 0; if(scaledLayers.length) drawStaticPreview(); }
+        document.getElementById('zoomInBtn').onclick = () => { viewScale *= 1.3; drawStaticPreview(); };
+        document.getElementById('zoomOutBtn').onclick = () => { viewScale /= 1.3; drawStaticPreview(); };
+        document.getElementById('zoomResetBtn').onclick = resetZoom;
+        
+        els.canvas.addEventListener('wheel', (e) => { 
+            e.preventDefault(); 
+            viewScale *= (e.deltaY < 0) ? 1.1 : 0.9; 
+            drawStaticPreview(); 
+        }, { passive: false });
+
+        const getPos = (e) => (e.touches && e.touches.length > 0) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+        
+        els.canvas.addEventListener('mousedown', startPan);
+        els.canvas.addEventListener('touchstart', startPan, { passive: false });
+        function startPan(e) { 
+            if(!scaledLayers.length || isAnimating) return; 
+            isDraggingCanvas = true; const p = getPos(e); 
+            dragStartX = p.x - viewOffsetX; dragStartY = p.y - viewOffsetY; 
+            els.canvas.classList.replace('cursor-grab', 'cursor-grabbing'); 
+        }
+
+        els.canvas.addEventListener('mousemove', movePan);
+        els.canvas.addEventListener('touchmove', movePan, { passive: false });
+        function movePan(e) { 
+            if (!isDraggingCanvas) return; e.preventDefault(); 
+            const p = getPos(e); 
+            viewOffsetX = p.x - dragStartX; viewOffsetY = p.y - dragStartY; 
+            drawStaticPreview(); 
+        }
+
+        const endPan = () => { isDraggingCanvas = false; els.canvas.classList.replace('cursor-grabbing', 'cursor-grab'); };
+        els.canvas.addEventListener('mouseup', endPan);
+        els.canvas.addEventListener('mouseleave', endPan);
+        els.canvas.addEventListener('touchend', endPan);
+        window.addEventListener('resize', () => { if(scaledLayers.length && !isAnimating) drawStaticPreview(); });
+
+        // ==========================================
+        // PROCESSAMENTO DE ARQUIVO
+        // ==========================================
+        els.fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
                 const file = this.files[0];
-                if (!file.name.toLowerCase().endsWith('.svg')) { alert("Apenas ficheiros .svg"); return; }
-                document.getElementById('uploadText').textContent = file.name;
-                jsFileName.value = file.name.replace(/\.[^/.]+$/, "");
+                if (!file.name.toLowerCase().endsWith('.svg')) return alert("Apenas .svg!");
+                els.uploadText.textContent = file.name;
+                els.jsFileName.value = file.name.replace(/\.[^/.]+$/, "") + "_layers";
                 const reader = new FileReader();
                 reader.onload = (e) => { currentSvgContent = e.target.result; processSVGasnc(currentSvgContent); };
                 reader.readAsText(file);
@@ -377,165 +468,538 @@
 
         async function processSVGasnc(svgText) {
             if (isProcessing) return;
-            isProcessing = true;
-            finalPathsData = null;
-            resetZoom(); 
+            isProcessing = true; stopAnimation();
+            rawLayers = []; scaledLayers = [];
+            resetZoom();
+            
             await requestWakeLock();
             
-            progressContainer.classList.remove('hidden');
-            statusMsg.textContent = "A ler dimensões...";
-            progressBar.style.width = "0%";
+            els.progContainer.classList.remove('hidden');
+            els.statusMsg.textContent = "A ler dimensões...";
+            els.progBar.style.width = "0%"; els.progText.textContent = "0%";
 
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(svgText, "image/svg+xml");
-                const svgElement = doc.querySelector('svg');
-                if (!svgElement) throw new Error("Ficheiro inválido.");
-                svgElement.style.width = '1000px'; svgElement.style.height = '1000px';
-                const container = document.getElementById('svgContainer');
-                container.innerHTML = ''; container.appendChild(svgElement);
-                container.getBoundingClientRect(); 
+                const svgEl = doc.querySelector('svg');
+                if (!svgEl) throw new Error("Ficheiro inválido.");
+                
+                svgEl.style.width = '1000px'; svgEl.style.height = '1000px';
+                document.getElementById('svgContainer').innerHTML = ''; 
+                document.getElementById('svgContainer').appendChild(svgEl);
+                document.getElementById('svgContainer').getBoundingClientRect(); 
 
-                const shapes = Array.from(svgElement.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse'));
+                const shapes = Array.from(svgEl.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse'));
+                
                 let totalLength = 0; let validShapes = [];
                 for (let i = 0; i < shapes.length; i++) {
-                    try { let len = shapes[i].getTotalLength(); if (len > 0) { validShapes.push({ element: shapes[i], length: len }); totalLength += len; } } catch(e) {}
+                    try { let len = shapes[i].getTotalLength(); if (len > 0) { validShapes.push({ el: shapes[i], len: len }); totalLength += len; } } catch(e) {}
                 }
                 if (totalLength === 0) throw new Error("Sem contornos visíveis.");
 
-                let extractedPaths = [];
-                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                const step = parseInt(stepPrecision.value) || 10;
-                let currentLengthProcessed = 0; let totalPointsCounter = 0;
-                const rootCTM = svgElement.getScreenCTM();
-                const inverseRootCTM = rootCTM ? rootCTM.inverse() : null;
-                const svgPt = svgElement.createSVGPoint();
+                const step = parseInt(els.stepPrecision.value) || 10;
+                const isCont = els.continuousLine.checked;
+                const maxDistSq = isCont ? (400 * 400) : ((step * 2.5) * (step * 2.5));
+                
+                let currentLengthProcessed = 0; let pointCounter = 0;
+                const rootCTM = svgEl.getScreenCTM();
+                const invRootCTM = rootCTM ? rootCTM.inverse() : null;
+                const svgPt = svgEl.createSVGPoint();
 
+                let layerCounter = 1;
+                let lastYield = performance.now();
+
+                // Para cada Shape, criamos uma Camada Inicial
                 for (let i = 0; i < validShapes.length; i++) {
-                    const shape = validShapes[i].element;
-                    const length = validShapes[i].length;
-                    let relativeCTM = null;
-                    try { const shapeCTM = shape.getScreenCTM(); if (inverseRootCTM && shapeCTM) relativeCTM = inverseRootCTM.multiply(shapeCTM); } catch(e) {}
+                    const shape = validShapes[i].el;
+                    const length = validShapes[i].len;
+                    let relCTM = null;
+                    try { const sCTM = shape.getScreenCTM(); if (invRootCTM && sCTM) relCTM = invRootCTM.multiply(sCTM); } catch(e) {}
 
-                    let currentLine = []; let lastValidPoint = null;
-                    const maxDistSq = (step * 2.5) * (step * 2.5);
-                    let lastYieldTime = performance.now();
+                    let rawTraces = [];
+                    let currentLine = []; 
+                    let lastPt = null;
 
                     for (let l = 0; l <= length; l += step) {
                         let p = shape.getPointAtLength(l);
-                        if (relativeCTM) { svgPt.x = p.x; svgPt.y = p.y; let globalPt = svgPt.matrixTransform(relativeCTM); p = { x: globalPt.x, y: globalPt.y }; }
+                        if (relCTM) { svgPt.x = p.x; svgPt.y = p.y; let gPt = svgPt.matrixTransform(relCTM); p = { x: gPt.x, y: gPt.y }; }
 
                         if (!isNaN(p.x) && !isNaN(p.y)) {
-                            if (lastValidPoint) {
-                                let dx = p.x - lastValidPoint.x; let dy = p.y - lastValidPoint.y;
-                                if ((dx * dx + dy * dy) > maxDistSq) { if (currentLine.length > 1) extractedPaths.push(currentLine); currentLine = []; }
+                            if (lastPt) {
+                                let dx = p.x - lastPt.x; let dy = p.y - lastPt.y;
+                                if ((dx*dx + dy*dy) > maxDistSq) { 
+                                    if (currentLine.length > 1) rawTraces.push(currentLine); 
+                                    currentLine = []; 
+                                }
                             }
-                            currentLine.push(p); lastValidPoint = p;
-                            if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
-                            if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+                            currentLine.push(p); lastPt = p;
                         }
-                        currentLengthProcessed += step; totalPointsCounter++;
-                        if (totalPointsCounter % 100 === 0) {
-                            if (performance.now() - lastYieldTime > 15) {
-                                const percent = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
-                                progressBar.style.width = `${percent}%`; progressText.textContent = `${percent}%`;
-                                await new Promise(r => setTimeout(r, 0)); lastYieldTime = performance.now();
-                            }
+                        
+                        currentLengthProcessed += step; pointCounter++;
+                        if (pointCounter % 150 === 0 && performance.now() - lastYield > 15) {
+                            let pct = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
+                            els.progBar.style.width = `${pct}%`; els.progText.textContent = `${pct}%`;
+                            await new Promise(r => setTimeout(r, 0)); lastYield = performance.now();
                         }
                     }
-                    if (currentLine.length > 1) extractedPaths.push(currentLine);
+                    if (currentLine.length > 1) rawTraces.push(currentLine);
+                    
+                    // Adiciona à lista de Camadas
+                    if (rawTraces.length > 0) {
+                        rawLayers.push({
+                            id: Date.now() + i,
+                            nome: `Shape_${layerCounter++}`,
+                            delay: 0,
+                            selected: false,
+                            rawTraces: rawTraces
+                        });
+                    }
                 }
-                finalPathsData = extractedPaths;
-                originalSvgBounds = { minX, minY, maxX, maxY };
-                updateScaleAndCode();
-                progressBar.style.width = "100%"; progressText.textContent = "100%"; statusMsg.textContent = "Mapeado!";
-            } catch (err) { statusMsg.textContent = err.message; } finally { isProcessing = false; releaseWakeLock(); setTimeout(() => progressContainer.classList.add('hidden'), 2500); }
-        }
-        
-        function updateScaleAndCode() {
-            if (!finalPathsData || !originalSvgBounds) return;
-            const screenW = parseInt(document.getElementById('screenW').value) || 1100;
-            const screenH = parseInt(document.getElementById('screenH').value) || 2442;
-            const percent = parseInt(document.getElementById('drawPercent').value) || 70;
-            const speedMultiplier = parseFloat(document.getElementById('drawSpeed').value) || 2.0;
-            const pauseDelay = parseInt(drawPause.value) || 15;
-            const isTurbo = turboMode.checked;
-            const pX = parseInt(posXInput.value) || 50; const pY = parseInt(posYInput.value) || 50;
-            const origW = originalSvgBounds.maxX - originalSvgBounds.minX;
-            const origH = originalSvgBounds.maxY - originalSvgBounds.minY;
-            const targetW = screenW * (percent / 100); const targetH = screenH * (percent / 100);
-            const scale = Math.min(targetW / origW, targetH / origH);
-            const offsetX = (screenW - (origW * scale)) * (pX / 100);
-            const offsetY = (screenH - (origH * scale)) * (pY / 100);
 
-            let totalPointsScaled = 0;
-            globalScaledPaths = finalPathsData.map(path => {
-                totalPointsScaled += path.length;
-                return path.map(p => ({ x: Math.floor((p.x - originalSvgBounds.minX) * scale + offsetX), y: Math.floor((p.y - originalSvgBounds.minY) * scale + offsetY) }));
+                if (rawLayers.length === 0) throw new Error("Nada extraído.");
+
+                els.progBar.style.width = "100%"; els.progText.textContent = "100%"; 
+                els.statusMsg.textContent = "Geometria carregada!";
+                
+                renderLayersUI();
+                updateGeometryAndScale();
+
+            } catch (err) { els.statusMsg.textContent = err.message; } 
+            finally { isProcessing = false; releaseWakeLock(); setTimeout(() => els.progContainer.classList.add('hidden'), 2000); }
+        }
+
+        // ==========================================
+        // UI DAS CAMADAS (RENDERIZAÇÃO E EVENTOS)
+        // ==========================================
+        function renderLayersUI() {
+            els.layersList.innerHTML = '';
+            if(rawLayers.length === 0) {
+                els.layersList.innerHTML = `<div class="text-center text-xs text-gray-400 mt-10">Nenhuma camada</div>`;
+                return;
+            }
+
+            rawLayers.forEach((layer, index) => {
+                const el = document.createElement('div');
+                el.className = `flex items-center grid grid-cols-12 gap-2 p-1.5 rounded text-xs border ${layer.selected ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-transparent hover:bg-gray-100'} transition-colors`;
+                
+                // Checkbox
+                const divSel = document.createElement('div');
+                divSel.className = 'col-span-1 flex justify-center';
+                const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'w-3 h-3 accent-indigo-500 cursor-pointer';
+                chk.checked = layer.selected;
+                chk.onchange = () => { layer.selected = chk.checked; checkMergeButton(); renderLayersUI(); };
+                divSel.appendChild(chk);
+                
+                // Nome
+                const divNome = document.createElement('div');
+                divNome.className = 'col-span-6 flex items-center';
+                const inpNome = document.createElement('input'); inpNome.type = 'text'; inpNome.className = 'w-full bg-transparent border-b border-transparent focus:border-indigo-300 outline-none px-1 text-gray-700 font-medium';
+                inpNome.value = layer.nome;
+                inpNome.onchange = (e) => { layer.nome = e.target.value; generateCode(); };
+                divNome.appendChild(inpNome);
+
+                // Delay
+                const divDelay = document.createElement('div');
+                divDelay.className = 'col-span-3 flex justify-center items-center gap-1';
+                const inpDelay = document.createElement('input'); inpDelay.type = 'number'; inpDelay.min = 0; inpDelay.step = 0.5; inpDelay.className = 'w-10 bg-white border border-gray-200 rounded p-0.5 text-center outline-none focus:border-indigo-500';
+                inpDelay.value = layer.delay;
+                inpDelay.onchange = (e) => { layer.delay = parseFloat(e.target.value) || 0; generateCode(); };
+                divDelay.appendChild(inpDelay);
+
+                // Ordem Botões
+                const divOrder = document.createElement('div');
+                divOrder.className = 'col-span-2 flex justify-center gap-1';
+                const btnUp = document.createElement('button'); btnUp.innerHTML = '<i data-lucide="chevron-up" class="w-3 h-3"></i>'; btnUp.className = 'p-0.5 text-gray-500 hover:bg-gray-200 rounded disabled:opacity-30';
+                btnUp.disabled = index === 0;
+                btnUp.onclick = () => moveLayer(index, -1);
+                
+                const btnDown = document.createElement('button'); btnDown.innerHTML = '<i data-lucide="chevron-down" class="w-3 h-3"></i>'; btnDown.className = 'p-0.5 text-gray-500 hover:bg-gray-200 rounded disabled:opacity-30';
+                btnDown.disabled = index === rawLayers.length - 1;
+                btnDown.onclick = () => moveLayer(index, 1);
+                
+                divOrder.appendChild(btnUp); divOrder.appendChild(btnDown);
+
+                el.appendChild(divSel); el.appendChild(divNome); el.appendChild(divDelay); el.appendChild(divOrder);
+                els.layersList.appendChild(el);
             });
-            generateCode(globalScaledPaths, screenW, screenH, speedMultiplier, pauseDelay, isTurbo, totalPointsScaled);
-            drawInteractivePreview();
+            lucide.createIcons();
+            checkMergeButton();
         }
 
-        function drawInteractivePreview() {
-            if (!globalScaledPaths) return;
-            document.getElementById('noPreviewMsg').style.display = 'none';
-            canvas.width = canvasWrapper.clientWidth; canvas.height = canvasWrapper.clientHeight;
-            const screenW = parseInt(document.getElementById('screenW').value) || 1100;
-            const screenH = parseInt(document.getElementById('screenH').value) || 2442;
-            const basePreviewScale = Math.min((canvas.width - 40) / screenW, (canvas.height - 40) / screenH);
+        function checkMergeButton() {
+            const selCount = rawLayers.filter(l => l.selected).length;
+            els.mergeBtn.disabled = selCount < 2;
+        }
+
+        function moveLayer(index, dir) {
+            stopAnimation();
+            const temp = rawLayers[index];
+            rawLayers[index] = rawLayers[index + dir];
+            rawLayers[index + dir] = temp;
+            renderLayersUI();
+            updateGeometryAndScale(); 
+        }
+
+        els.mergeBtn.onclick = () => {
+            stopAnimation();
+            const selected = rawLayers.filter(l => l.selected);
+            if (selected.length < 2) return;
+            
+            const unselected = rawLayers.filter(l => !l.selected);
+            let mergedTraces = [];
+            selected.forEach(l => mergedTraces.push(...l.rawTraces));
+            
+            const newLayer = {
+                id: Date.now(),
+                nome: `Camada_Mesclada_${unselected.length + 1}`,
+                delay: 0,
+                selected: false,
+                rawTraces: mergedTraces
+            };
+            
+            rawLayers = [newLayer, ...unselected];
+            renderLayersUI();
+            updateGeometryAndScale();
+        };
+
+        // ==========================================
+        // MOTOR DE GEOMETRIA
+        // ==========================================
+        function updateGeometryAndScale() {
+            if (rawLayers.length === 0) return;
+            stopAnimation();
+
+            let gMinX = Infinity, gMinY = Infinity, gMaxX = -Infinity, gMaxY = -Infinity;
+            rawLayers.forEach(layer => {
+                layer.rawTraces.forEach(tr => {
+                    tr.forEach(p => {
+                        if(p.x < gMinX) gMinX = p.x; if(p.x > gMaxX) gMaxX = p.x;
+                        if(p.y < gMinY) gMinY = p.y; if(p.y > gMaxY) gMaxY = p.y;
+                    });
+                });
+            });
+
+            const cx = (gMinX + gMaxX) / 2;
+            const cy = (gMinY + gMaxY) / 2;
+
+            const sX = parseFloat(els.scaleX.value) || 1.0;
+            const sY = parseFloat(els.scaleY.value) || 1.0;
+            const rotRad = (parseFloat(els.rotation.value) || 0) * Math.PI / 180;
+            const cos = Math.cos(rotRad); const sin = Math.sin(rotRad);
+
+            let transLayers = [];
+            let tMinX = Infinity, tMinY = Infinity, tMaxX = -Infinity, tMaxY = -Infinity;
+
+            rawLayers.forEach(layer => {
+                let newRawTraces = [];
+                layer.rawTraces.forEach(tr => {
+                    let newTr = [];
+                    tr.forEach(p => {
+                        let px = p.x - cx; let py = p.y - cy;
+                        if(isFlipX) px = -px; if(isFlipY) py = -py;
+                        px *= sX; py *= sY;
+                        let rx = px * cos - py * sin;
+                        let ry = px * sin + py * cos;
+                        let nx = rx + cx; let ny = ry + cy;
+
+                        newTr.push({ x: nx, y: ny });
+                        if(nx < tMinX) tMinX = nx; if(nx > tMaxX) tMaxX = nx;
+                        if(ny < tMinY) tMinY = ny; if(ny > tMaxY) tMaxY = ny;
+                    });
+                    newRawTraces.push(newTr);
+                });
+                transLayers.push({ ...layer, transTraces: newRawTraces });
+            });
+
+            const screenW = parseInt(els.screenW.value) || 1100;
+            const screenH = parseInt(els.screenH.value) || 2442;
+            const percent = parseInt(els.drawPercent.value) || 70;
+            const margin = parseInt(els.drawMargin.value) || 20;
+            const pX = parseInt(els.posXInput.value) || 50; 
+            const pY = parseInt(els.posYInput.value) || 50;
+
+            const availW = (screenW * (percent/100)) - (margin * 2);
+            const availH = (screenH * (percent/100)) - (margin * 2);
+
+            const tW = tMaxX - tMinX; const tH = tMaxY - tMinY;
+            const finalScale = Math.min(availW / tW, availH / tH);
+
+            const offsetX = (screenW - (tW * finalScale)) * (pX / 100);
+            const offsetY = (screenH - (tH * finalScale)) * (pY / 100);
+
+            scaledLayers = [];
+            let ptsOriginal = 0; let ptsFinais = 0;
+
+            transLayers.forEach(layer => {
+                let scaledTraces = [];
+                layer.transTraces.forEach(tr => {
+                    ptsOriginal += tr.length;
+                    let cleanPath = []; let lastPt = null;
+                    tr.forEach(p => {
+                        let fX = Math.floor((p.x - tMinX) * finalScale + offsetX);
+                        let fY = Math.floor((p.y - tMinY) * finalScale + offsetY);
+                        
+                        if (!lastPt) { cleanPath.push({x: fX, y: fY}); lastPt = {x: fX, y: fY}; } 
+                        else {
+                            let dx = fX - lastPt.x; let dy = fY - lastPt.y;
+                            if ((dx*dx + dy*dy) >= 2) { cleanPath.push({x: fX, y: fY}); lastPt = {x: fX, y: fY}; }
+                        }
+                    });
+                    if (cleanPath.length > 1) { scaledTraces.push(cleanPath); ptsFinais += cleanPath.length; }
+                });
+                scaledLayers.push({ nome: layer.nome, delay: layer.delay, traces: scaledTraces });
+            });
+
+            els.statsDisplay.innerHTML = `Camadas: <b>${scaledLayers.length}</b> | Pontos (após filtro): <b>${ptsFinais}</b> (era ${ptsOriginal})`;
+            
+            generateCode();
+            drawStaticPreview();
+        }
+
+        // ==========================================
+        // SISTEMA HSL & PREVIEW ESTÁTICO
+        // ==========================================
+        function getLayerColor(index, total) {
+            if (total <= 1) return `hsl(280, 80%, 50%)`;
+            const lightness = 80 - ((index / (total - 1)) * 50);
+            return `hsl(280, 80%, ${lightness}%)`;
+        }
+
+        function drawStaticPreview() {
+            if (!scaledLayers.length) return;
+            const noPreviewMsg = document.getElementById('noPreviewMsg');
+            if(noPreviewMsg) noPreviewMsg.style.display = 'none';
+            els.canvas.width = els.canvasWrapper.clientWidth; els.canvas.height = els.canvasWrapper.clientHeight;
+            const screenW = parseInt(els.screenW.value) || 1100; const screenH = parseInt(els.screenH.value) || 2442;
+            const bScale = Math.min((els.canvas.width - 40) / screenW, (els.canvas.height - 40) / screenH);
+            
             ctx.save();
             ctx.translate(viewOffsetX, viewOffsetY);
-            ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(viewScale, viewScale); ctx.translate(-canvas.width / 2, -canvas.height / 2);
-            const sw = screenW * basePreviewScale; const sh = screenH * basePreviewScale;
-            const sx = (canvas.width - sw) / 2; const sy = (canvas.height - sh) / 2;
+            ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
+            
+            const sw = screenW * bScale; const sh = screenH * bScale;
+            const sx = (els.canvas.width - sw) / 2; const sy = (els.canvas.height - sh) / 2;
+            
             ctx.fillStyle = "#1e293b"; ctx.fillRect(sx, sy, sw, sh);
             ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sx, sy, sw, sh);
-            globalScaledPaths.forEach((path, index) => {
-                ctx.beginPath(); ctx.strokeStyle = index % 2 === 0 ? "#10b981" : "#a855f7"; ctx.lineWidth = Math.max(0.5, 1.5 / viewScale); 
-                path.forEach((p, i) => { if (i === 0) ctx.moveTo(sx + p.x * basePreviewScale, sy + p.y * basePreviewScale); else ctx.lineTo(sx + p.x * basePreviewScale, sy + p.y * basePreviewScale); });
+            
+            const margin = parseInt(els.drawMargin.value) || 0;
+            if(margin > 0) {
+                ctx.strokeStyle = "rgba(239, 68, 68, 0.2)";
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(sx + (margin*bScale), sy + (margin*bScale), sw - (2*margin*bScale), sh - (2*margin*bScale));
+                ctx.setLineDash([]);
+            }
+
+            scaledLayers.forEach((layer, idx) => {
+                ctx.beginPath(); 
+                ctx.strokeStyle = getLayerColor(idx, scaledLayers.length); 
+                ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                layer.traces.forEach(tr => {
+                    tr.forEach((p, i) => { 
+                        if (i === 0) ctx.moveTo(sx + p.x * bScale, sy + p.y * bScale); 
+                        else ctx.lineTo(sx + p.x * bScale, sy + p.y * bScale); 
+                    });
+                });
                 ctx.stroke();
             });
             ctx.restore();
         }
 
-        function generateCode(paths, screenW, screenH, speedMultiplier, pauseDelay, isTurbo, totalPointsScaled) {
-            let codeLines = []; let tempoTotalMs = 0; const multiplier = 1 / speedMultiplier;
-            codeLines.push(`// --- SCRIPT PERFEITO PARA AUTO.JS ---`);
+        // ==========================================
+        // ANIMAÇÃO EM TEMPO REAL
+        // ==========================================
+        els.playBtn.onclick = startAnimation;
+        els.stopBtn.onclick = stopAnimation;
+
+        async function startAnimation() {
+            if (!scaledLayers.length) return;
+            stopAnimation(); 
+            isAnimating = true;
+            els.playBtn.classList.add('hidden'); els.stopBtn.classList.remove('hidden');
+            els.canvas.style.pointerEvents = 'none';
+
+            els.canvas.width = els.canvasWrapper.clientWidth; els.canvas.height = els.canvasWrapper.clientHeight;
+            const sw = parseInt(els.screenW.value) || 1100; const sh = parseInt(els.screenH.value) || 2442;
+            const bScale = Math.min((els.canvas.width - 40) / sw, (els.canvas.height - 40) / sh);
+            const sOffsetX = (els.canvas.width - (sw * bScale)) / 2; const sOffsetY = (els.canvas.height - (sh * bScale)) / 2;
+
+            const clearCanvas = () => {
+                ctx.clearRect(0,0,els.canvas.width, els.canvas.height);
+                ctx.save(); ctx.translate(viewOffsetX, viewOffsetY);
+                ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
+                ctx.fillStyle = "#1e293b"; ctx.fillRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
+                ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
+            };
+
+            clearCanvas();
+            
+            let cLayer = 0; let cTrace = 0; let cPoint = 0;
+            let currentPathBuffer = []; 
+            let finishedPaths = [];
+            let isDelaying = false;
+            let delayEndTime = 0;
+
+            const drawLoop = (time) => {
+                if (!isAnimating) return; 
+
+                if (isDelaying) {
+                    if (time < delayEndTime) { animReqId = requestAnimationFrame(drawLoop); return; }
+                    isDelaying = false; 
+                }
+
+                const speed = parseFloat(els.drawSpeed.value) || 2.0;
+                let pointsToDraw = Math.max(1, Math.floor(speed * 2)); 
+
+                while(pointsToDraw > 0 && isAnimating && !isDelaying) {
+                    if (cLayer >= scaledLayers.length) {
+                        stopAnimation(); return;
+                    }
+
+                    const layer = scaledLayers[cLayer];
+                    const trace = layer.traces[cTrace];
+
+                    if (cTrace === 0 && cPoint === 0 && layer.delay > 0) {
+                        isDelaying = true;
+                        delayEndTime = time + (layer.delay * 1000); 
+                        ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+                        ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.roundRect((els.canvas.width/2)-100, 20, 200, 30, 8); ctx.fill();
+                        ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+                        ctx.fillText(`Delay: ${layer.nome} (${layer.delay}s)`, els.canvas.width/2, 40);
+                        ctx.restore();
+                        animReqId = requestAnimationFrame(drawLoop); return;
+                    }
+
+                    if (cPoint < trace.length) {
+                        currentPathBuffer.push(trace[cPoint]);
+                        cPoint++;
+                        pointsToDraw--;
+                    } else {
+                        finishedPaths.push({ color: getLayerColor(cLayer, scaledLayers.length), path: [...currentPathBuffer] });
+                        currentPathBuffer = [];
+                        cTrace++; cPoint = 0;
+                        if (cTrace >= layer.traces.length) {
+                            cLayer++; cTrace = 0; 
+                        }
+                    }
+                }
+
+                clearCanvas();
+                finishedPaths.forEach(fp => {
+                    ctx.beginPath(); ctx.strokeStyle = fp.color; ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                    fp.path.forEach((p, i) => { if(i===0) ctx.moveTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); });
+                    ctx.stroke();
+                });
+                
+                if (currentPathBuffer.length > 0) {
+                    ctx.beginPath(); ctx.strokeStyle = getLayerColor(cLayer, scaledLayers.length); ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                    ctx.shadowColor = '#fff'; ctx.shadowBlur = 5;
+                    currentPathBuffer.forEach((p, i) => { if(i===0) ctx.moveTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); });
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+                ctx.restore(); 
+
+                if (isAnimating) animReqId = requestAnimationFrame(drawLoop);
+            };
+
+            animReqId = requestAnimationFrame(drawLoop);
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            if (animReqId) cancelAnimationFrame(animReqId);
+            els.playBtn.classList.remove('hidden'); els.stopBtn.classList.add('hidden');
+            els.canvas.style.pointerEvents = 'auto'; 
+            drawStaticPreview(); 
+        }
+
+        // ==========================================
+        // GERAÇÃO DO CÓDIGO AUTO.JS (CAMADAS E DELAYS)
+        // ==========================================
+        function generateCode() {
+            if (!scaledLayers.length) return;
+            const screenW = parseInt(els.screenW.value) || 1100;
+            const screenH = parseInt(els.screenH.value) || 2442;
+            const speedMultiplier = parseFloat(els.drawSpeed.value) || 2.0;
+            const pauseDelay = parseInt(els.drawPause.value) || 15;
+            const isTurbo = els.turboMode.checked;
+            
+            let codeLines = []; 
+            codeLines.push(`// --- SVG STUDIO: CÓDIGO COM CAMADAS ---`);
+            codeLines.push(`// Modo: ${isTurbo ? 'Turbo' : 'Normal'} | Velocidade: ${speedMultiplier.toFixed(1)}x\n`);
             codeLines.push(`setScreenMetrics(${screenW}, ${screenH});\n`);
-            codeLines.push(`var MULTIPLICADOR_TEMPO = ${multiplier.toFixed(3)};\n`);
+            codeLines.push(`var MULTIPLICADOR_TEMPO = ${(1 / speedMultiplier).toFixed(3)};\n`);
+            
             codeLines.push(`function desenharTraco(pontos) {`);
+            codeLines.push(`    if(pontos.length < 2) return;`);
+            codeLines.push(`    var MAX_PONTOS = 500; `);
+            codeLines.push(`    var i = 0;`);
+            codeLines.push(`    while (i < pontos.length - 1) {`);
+            codeLines.push(`        var fim = Math.min(i + MAX_PONTOS, pontos.length);`);
+            codeLines.push(`        var pedaco = pontos.slice(i, fim);`);
+            codeLines.push(`        if(pedaco.length < 2) break;`);
+            codeLines.push(`        `);
             if (isTurbo) {
-                codeLines.push(`    var duracaoBase = Math.max(10, pontos.length * 2);`);
-                codeLines.push(`    var duracaoFinal = Math.floor(duracaoBase * MULTIPLICADOR_TEMPO);`);
-                codeLines.push(`    gesture.apply(null, [duracaoFinal].concat(pontos));`);
-                codeLines.push(`    sleep(1);`);
-                paths.forEach(p => tempoTotalMs += Math.floor(Math.max(10, p.length * 2) * multiplier) + 1);
+                codeLines.push(`        var duracaoFinal = Math.floor(Math.max(10, pedaco.length * 2) * MULTIPLICADOR_TEMPO);`);
+                codeLines.push(`        if (duracaoFinal > 25000) duracaoFinal = 25000;`);
+                codeLines.push(`        gesture.apply(null, [duracaoFinal].concat(pedaco));`);
+                codeLines.push(`        sleep(1);`);
             } else {
-                codeLines.push(`    var duracaoBase = Math.max(100, pontos.length * 6);`);
-                codeLines.push(`    var duracaoFinal = Math.floor(duracaoBase * MULTIPLICADOR_TEMPO);`);
-                codeLines.push(`    gesture.apply(null, [duracaoFinal].concat(pontos));`);
-                codeLines.push(`    sleep(${pauseDelay});`);
-                paths.forEach(p => tempoTotalMs += Math.floor(Math.max(100, p.length * 6) * multiplier) + pauseDelay);
+                codeLines.push(`        var duracaoFinal = Math.floor(Math.max(100, pedaco.length * 6) * MULTIPLICADOR_TEMPO);`);
+                codeLines.push(`        if (duracaoFinal > 25000) duracaoFinal = 25000;`);
+                codeLines.push(`        gesture.apply(null, [duracaoFinal].concat(pedaco));`);
+                codeLines.push(`        sleep(${pauseDelay});`);
             }
+            codeLines.push(`        i = fim - 1;`);
+            codeLines.push(`    }`);
             codeLines.push(`}\n`);
-            codeLines.push(`var linhas = [`);
-            codeLines.push(paths.map(path => `  [${path.map(p => `[${p.x},${p.y}]`).join(',')}]`).join(',\n'));
+
+            codeLines.push(`var camadas = [`);
+            scaledLayers.forEach((layer, idx) => {
+                codeLines.push(`  {`);
+                codeLines.push(`    nome: "${layer.nome}",`);
+                codeLines.push(`    delay: ${layer.delay * 1000}, // Em milissegundos`);
+                codeLines.push(`    tracos: [`);
+                
+                const trStrs = layer.traces.map(tr => `      [${tr.map(p => `[${p.x},${p.y}]`).join(',')}]`);
+                codeLines.push(trStrs.join(',\n'));
+                
+                codeLines.push(`    ]`);
+                codeLines.push(`  }${idx < scaledLayers.length - 1 ? ',' : ''}`);
+            });
             codeLines.push(`];\n`);
-            codeLines.push(`toast("Iniciando..."); for (var i = 0; i < linhas.length; i++) desenharTraco(linhas[i]); toast("Concluído!");`);
-            const finalCode = codeLines.join('\n');
-            document.getElementById('outputCode').value = finalCode;
-            let m = Math.floor(tempoTotalMs / 60000); let s = Math.floor((tempoTotalMs % 60000) / 1000);
-            document.getElementById('statsDisplay').innerHTML = `<div class="flex justify-around items-center w-full gap-2"><span>Traços: <b>${paths.length}</b></span><span>Pontos: <b>${totalPointsScaled}</b></span><span>Tempo: <b>${m > 0 ? m+'m '+s+'s' : s+'s'}</b></span></div>`;
-            lucide.createIcons();
-            const btnCopy = document.getElementById('copyBtn'); const btnSave = document.getElementById('saveBtn');
-            btnCopy.classList.remove('opacity-50', 'cursor-not-allowed'); btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
-            btnCopy.onclick = () => { document.getElementById('outputCode').select(); document.execCommand('copy'); btnCopy.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Copiado!`; setTimeout(() => { btnCopy.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> Copiar`; lucide.createIcons(); }, 2000); lucide.createIcons(); };
-            btnSave.onclick = () => {
-                let name = jsFileName.value.trim() || 'mandala'; if (!name.endsWith('.js')) name += '.js';
-                const blob = new Blob([finalCode], { type: 'text/javascript' }); const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
-                btnSave.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Guardado!`; setTimeout(() => { btnSave.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Guardar`; lucide.createIcons(); }, 2000); lucide.createIcons();
+
+            codeLines.push(`// --- EXECUÇÃO PRINCIPAL ---`);
+            codeLines.push(`for (var c = 0; c < camadas.length; c++) {`);
+            codeLines.push(`    var camada = camadas[c];`);
+            codeLines.push(`    `);
+            codeLines.push(`    if (camada.delay > 0) {`);
+            codeLines.push(`        var segs = camada.delay / 1000;`);
+            codeLines.push(`        toast("Aguardando " + segs + "s para: " + camada.nome);`);
+            codeLines.push(`        sleep(camada.delay);`);
+            codeLines.push(`    } else {`);
+            codeLines.push(`        toast("Desenhando: " + camada.nome);`);
+            codeLines.push(`    }`);
+            codeLines.push(`    `);
+            codeLines.push(`    for (var t = 0; t < camada.tracos.length; t++) {`);
+            codeLines.push(`        desenharTraco(camada.tracos[t]);`);
+            codeLines.push(`    }`);
+            codeLines.push(`}`);
+            codeLines.push(`toast("Arte Finalizada!");`);
+
+            els.outputCode.value = codeLines.join('\n');
+            
+            document.getElementById('copyBtn').onclick = () => { 
+                els.outputCode.select(); document.execCommand('copy'); 
+            };
+            document.getElementById('saveBtn').onclick = () => {
+                let name = els.jsFileName.value.trim() || 'mandala_layers'; 
+                if (!name.endsWith('.js')) name += '.js';
+                const blob = new Blob([els.outputCode.value], { type: 'text/javascript' }); 
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = name; a.click(); 
+                URL.revokeObjectURL(url);
             };
         }
     </script>
