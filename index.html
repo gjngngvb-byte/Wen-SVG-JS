@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conversor SVG Studio</title>
+    <title>Conversor SVG para Gesture</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -17,7 +17,9 @@
                 linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        #svgContainer { position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none; }
+        #svgContainer {
+            position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none;
+        }
         
         /* Scrollbar customizada para as camadas */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -26,7 +28,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-6 overflow-x-hidden">
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-8 overflow-x-hidden">
 
     <div class="max-w-7xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -35,8 +37,8 @@
                     <i data-lucide="layers" class="w-8 h-8 text-indigo-600"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">Conversor SVG Studio</h1>
-                    <p class="text-xs text-gray-500 font-medium">Camadas, Geometria e Animação HSL</p>
+                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">Conversor SVG Absoluto</h1>
+                    <p class="text-xs text-gray-500 font-medium">Mandalas perfeitas com Zoom, Exportação Inteligente e Otimização</p>
                 </div>
             </div>
             
@@ -68,7 +70,7 @@
                     <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50 relative">
                         <input type="file" id="fileInput" accept="*/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         <i data-lucide="image" class="w-10 h-10 text-gray-400 mx-auto mb-3"></i>
-                        <p class="text-sm text-gray-600 font-bold break-all px-2" id="uploadText">Abrir SVG</p>
+                        <p class="text-sm text-gray-600 font-bold break-all px-2" id="uploadText">Clique para abrir os Arquivos</p>
                         <p class="text-xs text-gray-400 mt-1">Selecione o seu ficheiro .svg</p>
                     </div>
                     
@@ -83,7 +85,7 @@
                     </div>
                 </div>
 
-                <!-- Geometria & Tela -->
+                <!-- Configurações -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4 text-xs font-medium text-gray-600">
                     <h2 class="text-sm font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3 flex justify-between items-center">
                         Geometria & Tela
@@ -158,7 +160,6 @@
                             <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full accent-purple-500 h-1.5">
                         </div>
                         
-                        <!-- Manter Ecrã Ligado (WakeLock) -->
                         <div class="pt-1">
                             <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-blue-50 rounded-lg border border-blue-100">
                                 <span class="font-medium text-blue-700 flex items-center text-xs">
@@ -169,7 +170,6 @@
                             </label>
                         </div>
 
-                        <!-- Aprimorador de Tempo (Pausa) -->
                         <div class="pt-1">
                             <label class="flex justify-between mb-1"><span class="text-pink-700">Pausa ao Levantar Dedo</span><span id="pauseValue" class="text-pink-600 font-bold text-xs bg-pink-50 px-2 py-0.5 rounded">15ms</span></label>
                             <input type="range" id="drawPause" min="1" max="500" step="1" value="15" class="w-full accent-pink-500 h-1.5">
@@ -194,14 +194,15 @@
                             <i data-lucide="list-tree" class="w-4 h-4 text-indigo-500"></i> Camadas
                         </h2>
                         <button id="mergeBtn" class="text-xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 transition-colors flex items-center gap-1 disabled:opacity-50">
-                            <i data-lucide="combine" class="w-3 h-3"></i> Mesclar Selecionadas
+                            <i data-lucide="combine" class="w-3 h-3"></i> Mesclar Sel.
                         </button>
                     </div>
                     
-                    <!-- Cabeçalho da Tabela -->
+                    <!-- Cabeçalho da Tabela (Atualizado com "Vis") -->
                     <div class="grid grid-cols-12 gap-2 px-2 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                        <div class="col-span-1 text-center">Sel</div>
-                        <div class="col-span-6">Nome da Camada</div>
+                        <div class="col-span-1 text-center" title="Selecionar Camada">Sel</div>
+                        <div class="col-span-1 text-center" title="Visibilidade">Vis</div>
+                        <div class="col-span-5">Nome da Camada</div>
                         <div class="col-span-3 text-center">Delay (s)</div>
                         <div class="col-span-2 text-center">Ordem</div>
                     </div>
@@ -249,21 +250,29 @@
 
             <!-- COLUNA 3: CÓDIGO -->
             <div class="lg:col-span-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[85vh] lg:h-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-bold flex items-center gap-2 text-indigo-600">
-                        <i data-lucide="file-json" class="w-4 h-4"></i> Auto.js (JSON Structure)
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <h2 class="text-sm font-bold flex items-center gap-2 text-indigo-600 whitespace-nowrap">
+                        <i data-lucide="file-json" class="w-4 h-4"></i> Auto.js Code
                     </h2>
-                    <div class="flex gap-2">
-                        <button id="saveBtn" class="p-1.5 bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded transition" title="Guardar .js"><i data-lucide="download" class="w-4 h-4"></i></button>
-                        <button id="copyBtn" class="p-1.5 bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded transition" title="Copiar"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button id="saveBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-medium transition-colors opacity-50 cursor-not-allowed">
+                            <i data-lucide="download" class="w-3 h-3"></i> Guardar
+                        </button>
+                        <button id="copyBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors opacity-50 cursor-not-allowed">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Copiar
+                        </button>
                     </div>
                 </div>
-                <div class="mb-2 flex items-center bg-gray-50 rounded border border-gray-200 px-2 py-1">
+                
+                <div class="mb-3 flex items-center bg-gray-50 rounded border border-gray-200 px-2 py-1.5">
                     <span class="text-[10px] text-gray-500 mr-2 whitespace-nowrap">Nome:</span>
                     <input type="text" id="jsFileName" value="mandala_layers" class="w-full text-xs font-mono bg-transparent border-none outline-none text-indigo-700">
                     <span class="text-[10px] text-gray-500 font-mono">.js</span>
                 </div>
+                
                 <textarea id="outputCode" readonly placeholder="// Código gerado dinamicamente..." class="flex-1 w-full bg-[#0d1117] text-[#56d364] font-mono text-[10px] p-4 rounded-xl border border-gray-800 outline-none resize-none whitespace-pre overflow-x-auto focus:ring-1 focus:ring-indigo-500 custom-scrollbar"></textarea>
+                
                 <div class="mt-2 text-center text-[10px] text-gray-400 font-mono" id="statsDisplay">Pronto</div>
             </div>
 
@@ -278,14 +287,13 @@
         // ==========================================
         // ESTADO GLOBAL DA APLICAÇÃO
         // ==========================================
+        // rawLayers = [{ id, nome, delay, selected, visible, rawTraces: [] }]
         let rawLayers = []; 
         let scaledLayers = []; 
         
-        // Transformações
         let isFlipX = false;
         let isFlipY = false;
 
-        // Estado do Canvas/Animação
         let viewScale = 1.0;
         let viewOffsetX = 0;
         let viewOffsetY = 0;
@@ -296,9 +304,9 @@
 
         let isProcessing = false;
         let currentSvgContent = null;
-        let wakeLock = null; // WakeLock Control
+        let wakeLock = null; 
 
-        // Elementos DOM Centralizados
+        // Elementos DOM
         const els = {
             fileInput: document.getElementById('fileInput'),
             uploadText: document.getElementById('uploadText'),
@@ -343,13 +351,12 @@
 
         const ctx = els.canvas.getContext('2d');
 
-        // --- SISTEMA WAKELOCK (Correção para permissões bloqueadas) ---
+        // --- SISTEMA WAKELOCK ---
         async function requestWakeLock() {
             if (!('wakeLock' in navigator) || !els.wakeLockMode.checked) return;
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
             } catch (err) {
-                // Silencia erros, apenas desativa a opção caso seja negado pelo browser.
                 els.wakeLockMode.checked = false;
                 els.wakeLockMode.disabled = true;
             }
@@ -357,9 +364,7 @@
 
         function releaseWakeLock() {
             if (wakeLock !== null) {
-                wakeLock.release().then(() => {
-                    wakeLock = null;
-                }).catch(() => {});
+                wakeLock.release().then(() => { wakeLock = null; }).catch(() => {});
             }
         }
 
@@ -369,21 +374,20 @@
             }
         });
 
-        // ==========================================
-        // EVENT LISTENERS BÁSICOS
-        // ==========================================
+        // Event Listeners UI
         els.drawPercent.addEventListener('input', (e) => { els.percentValue.textContent = `${e.target.value}%`; triggerUpdate(); });
         els.drawMargin.addEventListener('input', (e) => { els.marginValue.textContent = `${e.target.value}px`; triggerUpdate(); });
         els.drawSpeed.addEventListener('input', (e) => { els.speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`; triggerCodeUpdate(); });
         els.drawPause.addEventListener('input', (e) => { els.pauseValue.textContent = `${e.target.value}ms`; triggerCodeUpdate(); });
-        els.rotation.addEventListener('input', (e) => { els.rotationValue.textContent = `${e.target.value}°`; triggerUpdate(); });
-        els.scaleX.addEventListener('change', triggerUpdate);
-        els.scaleY.addEventListener('change', triggerUpdate);
-        els.screenW.addEventListener('change', triggerUpdate);
-        els.screenH.addEventListener('change', triggerUpdate);
         els.posXInput.addEventListener('input', triggerUpdate);
         els.posYInput.addEventListener('input', triggerUpdate);
         els.turboMode.addEventListener('change', triggerCodeUpdate);
+        els.screenW.addEventListener('change', triggerUpdate);
+        els.screenH.addEventListener('change', triggerUpdate);
+        
+        els.rotation.addEventListener('input', (e) => { els.rotationValue.textContent = `${e.target.value}°`; triggerUpdate(); });
+        els.scaleX.addEventListener('change', triggerUpdate);
+        els.scaleY.addEventListener('change', triggerUpdate);
         
         els.stepPrecision.addEventListener('input', (e) => els.precisionValue.textContent = `${e.target.value}px`);
         els.stepPrecision.addEventListener('change', reprocessSVG);
@@ -401,19 +405,11 @@
             triggerUpdate();
         };
 
-        function triggerUpdate() {
-            if (rawLayers.length > 0) updateGeometryAndScale();
-        }
-        function triggerCodeUpdate() {
-            if (scaledLayers.length > 0) generateCode();
-        }
-        function reprocessSVG() {
-            if (currentSvgContent) processSVGasnc(currentSvgContent);
-        }
+        function triggerUpdate() { if (rawLayers.length > 0) updateGeometryAndScale(); }
+        function triggerCodeUpdate() { if (scaledLayers.length > 0) generateCode(); }
+        function reprocessSVG() { if (currentSvgContent) processSVGasnc(currentSvgContent); }
 
-        // ==========================================
-        // ZOOM & PAN CANVAS
-        // ==========================================
+        // Zoom e Pan
         function resetZoom() { viewScale = 1.0; viewOffsetX = 0; viewOffsetY = 0; if(scaledLayers.length) drawStaticPreview(); }
         document.getElementById('zoomInBtn').onclick = () => { viewScale *= 1.3; drawStaticPreview(); };
         document.getElementById('zoomOutBtn').onclick = () => { viewScale /= 1.3; drawStaticPreview(); };
@@ -509,7 +505,6 @@
                 let layerCounter = 1;
                 let lastYield = performance.now();
 
-                // Para cada Shape, criamos uma Camada Inicial
                 for (let i = 0; i < validShapes.length; i++) {
                     const shape = validShapes[i].el;
                     const length = validShapes[i].len;
@@ -544,13 +539,13 @@
                     }
                     if (currentLine.length > 1) rawTraces.push(currentLine);
                     
-                    // Adiciona à lista de Camadas
                     if (rawTraces.length > 0) {
                         rawLayers.push({
                             id: Date.now() + i,
-                            nome: `Shape_${layerCounter++}`,
+                            nome: `Camada ${layerCounter++}`,
                             delay: 0,
                             selected: false,
+                            visible: true, // Propriedade nova de visibilidade!
                             rawTraces: rawTraces
                         });
                     }
@@ -569,7 +564,7 @@
         }
 
         // ==========================================
-        // UI DAS CAMADAS (RENDERIZAÇÃO E EVENTOS)
+        // UI DAS CAMADAS (COM DESTAQUE E VISIBILIDADE)
         // ==========================================
         function renderLayersUI() {
             els.layersList.innerHTML = '';
@@ -580,25 +575,36 @@
 
             rawLayers.forEach((layer, index) => {
                 const el = document.createElement('div');
-                el.className = `flex items-center grid grid-cols-12 gap-2 p-1.5 rounded text-xs border ${layer.selected ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-transparent hover:bg-gray-100'} transition-colors`;
+                // Estilo da linha (se selecionado fica com bg azul, se invisível fica com opacidade)
+                let baseClass = `flex items-center grid grid-cols-12 gap-2 p-1.5 rounded text-xs border transition-colors`;
+                if (layer.selected) baseClass += ` bg-indigo-50 border-indigo-200`;
+                else baseClass += ` bg-gray-50 border-transparent hover:bg-gray-100`;
+                if (!layer.visible) baseClass += ` opacity-50`;
+                el.className = baseClass;
                 
-                // Checkbox
+                // [SEL] Checkbox
                 const divSel = document.createElement('div');
                 divSel.className = 'col-span-1 flex justify-center';
                 const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'w-3 h-3 accent-indigo-500 cursor-pointer';
                 chk.checked = layer.selected;
-                chk.onchange = () => { layer.selected = chk.checked; checkMergeButton(); renderLayersUI(); };
+                chk.onchange = () => { layer.selected = chk.checked; checkMergeButton(); renderLayersUI(); updateGeometryAndScale(); };
                 divSel.appendChild(chk);
                 
-                // Nome
+                // [VIS] Olho
+                const divVis = document.createElement('div');
+                divVis.className = 'col-span-1 flex justify-center cursor-pointer text-gray-500 hover:text-indigo-600';
+                divVis.innerHTML = layer.visible ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i>' : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>';
+                divVis.onclick = () => { layer.visible = !layer.visible; renderLayersUI(); updateGeometryAndScale(); };
+                
+                // [NOME] Nome da Camada
                 const divNome = document.createElement('div');
-                divNome.className = 'col-span-6 flex items-center';
+                divNome.className = 'col-span-5 flex items-center';
                 const inpNome = document.createElement('input'); inpNome.type = 'text'; inpNome.className = 'w-full bg-transparent border-b border-transparent focus:border-indigo-300 outline-none px-1 text-gray-700 font-medium';
                 inpNome.value = layer.nome;
-                inpNome.onchange = (e) => { layer.nome = e.target.value; generateCode(); };
+                inpNome.onchange = (e) => { layer.nome = e.target.value; generateCode(); }; 
                 divNome.appendChild(inpNome);
 
-                // Delay
+                // [DELAY]
                 const divDelay = document.createElement('div');
                 divDelay.className = 'col-span-3 flex justify-center items-center gap-1';
                 const inpDelay = document.createElement('input'); inpDelay.type = 'number'; inpDelay.min = 0; inpDelay.step = 0.5; inpDelay.className = 'w-10 bg-white border border-gray-200 rounded p-0.5 text-center outline-none focus:border-indigo-500';
@@ -606,7 +612,7 @@
                 inpDelay.onchange = (e) => { layer.delay = parseFloat(e.target.value) || 0; generateCode(); };
                 divDelay.appendChild(inpDelay);
 
-                // Ordem Botões
+                // [ORDEM] Botões
                 const divOrder = document.createElement('div');
                 divOrder.className = 'col-span-2 flex justify-center gap-1';
                 const btnUp = document.createElement('button'); btnUp.innerHTML = '<i data-lucide="chevron-up" class="w-3 h-3"></i>'; btnUp.className = 'p-0.5 text-gray-500 hover:bg-gray-200 rounded disabled:opacity-30';
@@ -619,7 +625,7 @@
                 
                 divOrder.appendChild(btnUp); divOrder.appendChild(btnDown);
 
-                el.appendChild(divSel); el.appendChild(divNome); el.appendChild(divDelay); el.appendChild(divOrder);
+                el.appendChild(divSel); el.appendChild(divVis); el.appendChild(divNome); el.appendChild(divDelay); el.appendChild(divOrder);
                 els.layersList.appendChild(el);
             });
             lucide.createIcons();
@@ -651,24 +657,26 @@
             
             const newLayer = {
                 id: Date.now(),
-                nome: `Camada_Mesclada_${unselected.length + 1}`,
+                nome: `Grupo_Mesclado_${unselected.length + 1}`,
                 delay: 0,
                 selected: false,
+                visible: true,
                 rawTraces: mergedTraces
             };
             
-            rawLayers = [newLayer, ...unselected];
+            rawLayers = [newLayer, ...unselected]; 
             renderLayersUI();
             updateGeometryAndScale();
         };
 
         // ==========================================
-        // MOTOR DE GEOMETRIA
+        // MOTOR DE GEOMETRIA & ESCALA
         // ==========================================
         function updateGeometryAndScale() {
             if (rawLayers.length === 0) return;
             stopAnimation();
 
+            // Usa SEMPRE todas as camadas para o Bounding Box para a ecrã não "saltar" se ocultarmos a maior camada
             let gMinX = Infinity, gMinY = Infinity, gMaxX = -Infinity, gMaxY = -Infinity;
             rawLayers.forEach(layer => {
                 layer.rawTraces.forEach(tr => {
@@ -720,7 +728,6 @@
 
             const availW = (screenW * (percent/100)) - (margin * 2);
             const availH = (screenH * (percent/100)) - (margin * 2);
-
             const tW = tMaxX - tMinX; const tH = tMaxY - tMinY;
             const finalScale = Math.min(availW / tW, availH / tH);
 
@@ -728,12 +735,11 @@
             const offsetY = (screenH - (tH * finalScale)) * (pY / 100);
 
             scaledLayers = [];
-            let ptsOriginal = 0; let ptsFinais = 0;
+            let ptsFinais = 0; let visCamadas = 0;
 
             transLayers.forEach(layer => {
                 let scaledTraces = [];
                 layer.transTraces.forEach(tr => {
-                    ptsOriginal += tr.length;
                     let cleanPath = []; let lastPt = null;
                     tr.forEach(p => {
                         let fX = Math.floor((p.x - tMinX) * finalScale + offsetX);
@@ -745,19 +751,32 @@
                             if ((dx*dx + dy*dy) >= 2) { cleanPath.push({x: fX, y: fY}); lastPt = {x: fX, y: fY}; }
                         }
                     });
-                    if (cleanPath.length > 1) { scaledTraces.push(cleanPath); ptsFinais += cleanPath.length; }
+                    if (cleanPath.length > 1) { 
+                        scaledTraces.push(cleanPath); 
+                        if (layer.visible) ptsFinais += cleanPath.length; // Conta apenas se for visível
+                    }
                 });
-                scaledLayers.push({ nome: layer.nome, delay: layer.delay, traces: scaledTraces });
+                
+                if (layer.visible) visCamadas++;
+                
+                // Repassa TODOS os atributos de controlo visual e de código
+                scaledLayers.push({ 
+                    nome: layer.nome, 
+                    delay: layer.delay, 
+                    visible: layer.visible,
+                    selected: layer.selected,
+                    traces: scaledTraces 
+                });
             });
 
-            els.statsDisplay.innerHTML = `Camadas: <b>${scaledLayers.length}</b> | Pontos (após filtro): <b>${ptsFinais}</b> (era ${ptsOriginal})`;
+            els.statsDisplay.innerHTML = `Camadas Visíveis: <b>${visCamadas}/${scaledLayers.length}</b> | Pontos Extraídos: <b>${ptsFinais}</b>`;
             
             generateCode();
             drawStaticPreview();
         }
 
         // ==========================================
-        // SISTEMA HSL & PREVIEW ESTÁTICO
+        // SISTEMA HSL E RENDERIZAÇÃO ESTÁTICA
         // ==========================================
         function getLayerColor(index, total) {
             if (total <= 1) return `hsl(280, 80%, 50%)`;
@@ -770,6 +789,7 @@
             const noPreviewMsg = document.getElementById('noPreviewMsg');
             if(noPreviewMsg) noPreviewMsg.style.display = 'none';
             els.canvas.width = els.canvasWrapper.clientWidth; els.canvas.height = els.canvasWrapper.clientHeight;
+            
             const screenW = parseInt(els.screenW.value) || 1100; const screenH = parseInt(els.screenH.value) || 2442;
             const bScale = Math.min((els.canvas.width - 40) / screenW, (els.canvas.height - 40) / screenH);
             
@@ -783,18 +803,30 @@
             ctx.fillStyle = "#1e293b"; ctx.fillRect(sx, sy, sw, sh);
             ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sx, sy, sw, sh);
             
-            const margin = parseInt(els.drawMargin.value) || 0;
-            if(margin > 0) {
-                ctx.strokeStyle = "rgba(239, 68, 68, 0.2)";
-                ctx.setLineDash([4, 4]);
-                ctx.strokeRect(sx + (margin*bScale), sy + (margin*bScale), sw - (2*margin*bScale), sh - (2*margin*bScale));
-                ctx.setLineDash([]);
-            }
+            const anySelected = scaledLayers.some(l => l.selected);
 
             scaledLayers.forEach((layer, idx) => {
+                if (!layer.visible) return; // Ignore hidden layers
+
                 ctx.beginPath(); 
-                ctx.strokeStyle = getLayerColor(idx, scaledLayers.length); 
-                ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                
+                // Lógica de Highlight (Modo Foco)
+                if (anySelected) {
+                    if (layer.selected) {
+                        ctx.strokeStyle = getLayerColor(idx, scaledLayers.length);
+                        ctx.lineWidth = Math.max(1.0, 2.0 / viewScale); // Fica mais grosso
+                        ctx.globalAlpha = 1.0;
+                    } else {
+                        ctx.strokeStyle = getLayerColor(idx, scaledLayers.length);
+                        ctx.lineWidth = Math.max(0.5, 1.0 / viewScale);
+                        ctx.globalAlpha = 0.2; // Fica transparente/desfocado
+                    }
+                } else {
+                    ctx.strokeStyle = getLayerColor(idx, scaledLayers.length); 
+                    ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                    ctx.globalAlpha = 1.0;
+                }
+
                 layer.traces.forEach(tr => {
                     tr.forEach((p, i) => { 
                         if (i === 0) ctx.moveTo(sx + p.x * bScale, sy + p.y * bScale); 
@@ -803,6 +835,7 @@
                 });
                 ctx.stroke();
             });
+            ctx.globalAlpha = 1.0; // Reset da opacidade global
             ctx.restore();
         }
 
@@ -839,6 +872,7 @@
             let finishedPaths = [];
             let isDelaying = false;
             let delayEndTime = 0;
+            const anySelected = scaledLayers.some(l => l.selected);
 
             const drawLoop = (time) => {
                 if (!isAnimating) return; 
@@ -857,6 +891,13 @@
                     }
 
                     const layer = scaledLayers[cLayer];
+
+                    // Ignorar camadas ocultas
+                    if (!layer.visible) {
+                        cLayer++; cTrace = 0; cPoint = 0;
+                        continue;
+                    }
+
                     const trace = layer.traces[cTrace];
 
                     if (cTrace === 0 && cPoint === 0 && layer.delay > 0) {
@@ -875,7 +916,12 @@
                         cPoint++;
                         pointsToDraw--;
                     } else {
-                        finishedPaths.push({ color: getLayerColor(cLayer, scaledLayers.length), path: [...currentPathBuffer] });
+                        // Guarda propriedade "selected" para a hora de pintar a animação
+                        finishedPaths.push({ 
+                            color: getLayerColor(cLayer, scaledLayers.length), 
+                            path: [...currentPathBuffer],
+                            selected: layer.selected
+                        });
                         currentPathBuffer = [];
                         cTrace++; cPoint = 0;
                         if (cTrace >= layer.traces.length) {
@@ -885,19 +931,43 @@
                 }
 
                 clearCanvas();
+                
+                // Desenhar as linhas que já passaram
                 finishedPaths.forEach(fp => {
-                    ctx.beginPath(); ctx.strokeStyle = fp.color; ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                    ctx.beginPath(); ctx.strokeStyle = fp.color; 
+                    
+                    if (anySelected) {
+                        ctx.lineWidth = fp.selected ? Math.max(1.0, 2.0 / viewScale) : Math.max(0.5, 1.0 / viewScale);
+                        ctx.globalAlpha = fp.selected ? 1.0 : 0.2;
+                    } else {
+                        ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                        ctx.globalAlpha = 1.0;
+                    }
+
                     fp.path.forEach((p, i) => { if(i===0) ctx.moveTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); });
                     ctx.stroke();
                 });
                 
+                // Desenhar o traço atual do "robot" (glow na ponta da cor)
                 if (currentPathBuffer.length > 0) {
-                    ctx.beginPath(); ctx.strokeStyle = getLayerColor(cLayer, scaledLayers.length); ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                    const l = scaledLayers[cLayer];
+                    ctx.beginPath(); ctx.strokeStyle = getLayerColor(cLayer, scaledLayers.length); 
+                    
+                    if (anySelected) {
+                        ctx.lineWidth = l.selected ? Math.max(1.0, 2.0 / viewScale) : Math.max(0.5, 1.0 / viewScale);
+                        ctx.globalAlpha = l.selected ? 1.0 : 0.2;
+                    } else {
+                        ctx.lineWidth = Math.max(0.5, 1.5 / viewScale);
+                        ctx.globalAlpha = 1.0;
+                    }
+                    
                     ctx.shadowColor = '#fff'; ctx.shadowBlur = 5;
                     currentPathBuffer.forEach((p, i) => { if(i===0) ctx.moveTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale, sOffsetY+p.y*bScale); });
                     ctx.stroke();
                     ctx.shadowBlur = 0;
                 }
+
+                ctx.globalAlpha = 1.0; // Reset
                 ctx.restore(); 
 
                 if (isAnimating) animReqId = requestAnimationFrame(drawLoop);
@@ -915,7 +985,7 @@
         }
 
         // ==========================================
-        // GERAÇÃO DO CÓDIGO AUTO.JS (CAMADAS E DELAYS)
+        // GERAÇÃO DO CÓDIGO AUTO.JS (PROTEGIDO)
         // ==========================================
         function generateCode() {
             if (!scaledLayers.length) return;
@@ -925,9 +995,19 @@
             const pauseDelay = parseInt(els.drawPause.value) || 15;
             const isTurbo = els.turboMode.checked;
             
+            // FILTRA APENAS AS CAMADAS VISÍVEIS
+            const visibleLayers = scaledLayers.filter(l => l.visible);
+
             let codeLines = []; 
-            codeLines.push(`// --- SVG STUDIO: CÓDIGO COM CAMADAS ---`);
+            codeLines.push(`// --- SVG STUDIO: CÓDIGO FINAL ---`);
             codeLines.push(`// Modo: ${isTurbo ? 'Turbo' : 'Normal'} | Velocidade: ${speedMultiplier.toFixed(1)}x\n`);
+            
+            if (visibleLayers.length === 0) {
+                codeLines.push(`// Nenhuma camada visível selecionada. Ative as camadas no painel.`);
+                els.outputCode.value = codeLines.join('\n');
+                return;
+            }
+
             codeLines.push(`setScreenMetrics(${screenW}, ${screenH});\n`);
             codeLines.push(`var MULTIPLICADOR_TEMPO = ${(1 / speedMultiplier).toFixed(3)};\n`);
             
@@ -956,24 +1036,21 @@
             codeLines.push(`}\n`);
 
             codeLines.push(`var camadas = [`);
-            scaledLayers.forEach((layer, idx) => {
+            visibleLayers.forEach((layer, idx) => {
                 codeLines.push(`  {`);
                 codeLines.push(`    nome: "${layer.nome}",`);
-                codeLines.push(`    delay: ${layer.delay * 1000}, // Em milissegundos`);
+                codeLines.push(`    delay: ${layer.delay * 1000}, // Milissegundos`);
                 codeLines.push(`    tracos: [`);
-                
                 const trStrs = layer.traces.map(tr => `      [${tr.map(p => `[${p.x},${p.y}]`).join(',')}]`);
                 codeLines.push(trStrs.join(',\n'));
-                
                 codeLines.push(`    ]`);
-                codeLines.push(`  }${idx < scaledLayers.length - 1 ? ',' : ''}`);
+                codeLines.push(`  }${idx < visibleLayers.length - 1 ? ',' : ''}`);
             });
             codeLines.push(`];\n`);
 
             codeLines.push(`// --- EXECUÇÃO PRINCIPAL ---`);
             codeLines.push(`for (var c = 0; c < camadas.length; c++) {`);
             codeLines.push(`    var camada = camadas[c];`);
-            codeLines.push(`    `);
             codeLines.push(`    if (camada.delay > 0) {`);
             codeLines.push(`        var segs = camada.delay / 1000;`);
             codeLines.push(`        toast("Aguardando " + segs + "s para: " + camada.nome);`);
@@ -981,7 +1058,6 @@
             codeLines.push(`    } else {`);
             codeLines.push(`        toast("Desenhando: " + camada.nome);`);
             codeLines.push(`    }`);
-            codeLines.push(`    `);
             codeLines.push(`    for (var t = 0; t < camada.tracos.length; t++) {`);
             codeLines.push(`        desenharTraco(camada.tracos[t]);`);
             codeLines.push(`    }`);
