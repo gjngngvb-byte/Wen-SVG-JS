@@ -305,14 +305,11 @@
             if (!('wakeLock' in navigator) || !wakeLockMode.checked) return;
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock ativo.');
             } catch (err) {
-                // NotAllowedError é comum em iframes ou sites sem permissão explícita
-                if (err.name === 'NotAllowedError') {
-                    console.warn('A Permissão de WakeLock foi negada pelo navegador ou plataforma. O processo continuará normalmente.');
-                } else {
-                    console.error(`Erro WakeLock: ${err.name}, ${err.message}`);
-                }
+                // Silenciamos os erros de console para evitar alertas no sistema.
+                // Se a permissão for negada (comum em iframes/previews), apenas desativamos a opção visualmente.
+                wakeLockMode.checked = false;
+                wakeLockMode.disabled = true;
             }
         }
 
