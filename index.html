@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conversor SVG para Gesture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .drop-zone { transition: all 0.3s ease; }
+        .drop-zone.dragover { background-color: #EEF2FF; border-color: #4F46E5; }
+        /* Fundo do Canvas Estilizado */
+        canvas {
+            background-color: #111827;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        #svgContainer {
+            position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="text-center space-y-2">
+            <div class="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-full mb-2">
+                <i data-lucide="check-circle" class="w-8 h-8 text-emerald-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">Conversor SVG Absoluto</h1>
+            <p class="text-gray-500">Mandalas perfeitas com Zoom, Exportação Inteligente e Otimização</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Painel Esquerdo -->
+            <div class="space-y-6 lg:col-span-1">
+                <!-- Upload -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-500"></i>
+                        Ficheiro SVG
+                    </h2>
+                    
+                    <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:bg-gray-50 relative">
+                        <input type="file" id="fileInput" accept="*/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <i data-lucide="image" class="w-10 h-10 text-gray-400 mx-auto mb-3"></i>
+                        <p class="text-sm text-gray-600 font-medium break-all px-2" id="uploadText">Clique para abrir os Arquivos</p>
+                        <p class="text-xs text-gray-400 mt-1">Selecione o seu ficheiro .svg</p>
+                    </div>
+                    
+                    <div id="progressContainer" class="mt-4 hidden">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-indigo-600 font-medium" id="statusMsg">A calcular trajetórias...</span>
+                            <span class="text-indigo-600 font-bold" id="progressText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-indigo-500"></i>
+                        Controlo Total
+                    </h2>
+                    
+                    <div class="space-y-5 text-sm">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="flex items-center text-gray-600 mb-1">
+                                    Largura (X)
+                                    <div class="group relative inline-block ml-1 cursor-help">
+                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
+                                            A largura exata do ecrã onde o Auto.js vai desenhar.
+                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </label>
+                                <input type="number" id="screenW" value="1100" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
+                            </div>
+                            <div>
+                                <label class="flex items-center text-gray-600 mb-1">
+                                    Altura (Y)
+                                    <div class="group relative inline-block ml-1 cursor-help">
+                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
+                                            A altura exata do ecrã onde o Auto.js vai desenhar.
+                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </label>
+                                <input type="number" id="screenH" value="2442" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-600 mb-1 flex justify-between">
+                                <span class="flex items-center">
+                                    Ocupação do Ecrã
+                                </span>
+                                <span id="percentValue" class="text-indigo-600 font-semibold">70%</span>
+                            </label>
+                            <input type="range" id="drawPercent" min="10" max="95" value="70" class="w-full accent-indigo-600">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                            <div>
+                                <label class="flex items-center text-gray-600 mb-1 text-xs">Mover Esq/Dir</label>
+                                <input type="range" id="posX" min="0" max="100" value="50" class="w-full accent-indigo-500">
+                            </div>
+                            <div>
+                                <label class="flex items-center text-gray-600 mb-1 text-xs">Mover Cima/Baixo</label>
+                                <input type="range" id="posY" min="0" max="100" value="50" class="w-full accent-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Velocidade Dinâmica -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="block text-gray-600 mb-1 flex justify-between">
+                                <span class="font-medium text-purple-700 flex items-center">Velocidade do Robô</span>
+                                <span id="speedValue" class="text-purple-600 font-bold text-xs bg-purple-50 px-2 py-0.5 rounded">2.0x (Rápido)</span>
+                            </label>
+                            <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full accent-purple-500">
+                        </div>
+                        
+                        <!-- Modo Turbo Android -->
+                        <div class="pt-1">
+                            <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-amber-50 rounded-lg border border-amber-100">
+                                <span class="font-medium text-amber-700 flex items-center">
+                                    <i data-lucide="zap" class="w-4 h-4 mr-1"></i>
+                                    Modo Turbo (Rápido)
+                                </span>
+                                <input type="checkbox" id="turboMode" class="w-5 h-5 accent-amber-600 rounded cursor-pointer">
+                            </label>
+                        </div>
+                        
+                        <!-- Manter Ecrã Ligado (WakeLock) -->
+                        <div class="pt-1">
+                            <label class="flex items-center justify-between text-gray-600 cursor-pointer p-2 bg-blue-50 rounded-lg border border-blue-100">
+                                <span class="font-medium text-blue-700 flex items-center text-xs">
+                                    <i data-lucide="sun" class="w-4 h-4 mr-1"></i>
+                                    Manter Ecrã Ligado
+                                    <div class="group relative inline-block ml-1 cursor-help">
+                                        <i data-lucide="help-circle" class="w-4 h-4 text-blue-400 hover:text-blue-600"></i>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
+                                            Tenta manter o ecrã aceso durante a conversão. Note: Pode ser bloqueado por restrições do navegador/plataforma.
+                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </span>
+                                <input type="checkbox" id="wakeLockMode" checked class="w-5 h-5 accent-blue-600 rounded cursor-pointer">
+                            </label>
+                        </div>
+
+                        <!-- Aprimorador de Tempo (Pausa) -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="block text-gray-600 mb-1 flex justify-between">
+                                <span class="font-medium text-pink-700 flex items-center">Pausa ao Levantar Dedo</span>
+                                <span id="pauseValue" class="text-pink-600 font-bold text-xs bg-pink-50 px-2 py-0.5 rounded">15ms</span>
+                            </label>
+                            <input type="range" id="drawPause" min="1" max="500" step="1" value="15" class="w-full accent-pink-500">
+                        </div>
+
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="block text-gray-600 mb-1 flex justify-between">
+                                <span class="flex items-center">Precisão dos Pontos</span>
+                                <span id="precisionValue" class="text-gray-500">10px</span>
+                            </label>
+                            <input type="range" id="stepPrecision" min="2" max="30" value="10" class="w-full accent-gray-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painel Central e Direito -->
+            <div class="lg:col-span-2 space-y-6 flex flex-col">
+                
+                <!-- Preview Canvas com Zoom -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5 text-indigo-500"></i>
+                        Preview do Trajeto (Use o Zoom e Arraste)
+                    </h2>
+                    
+                    <div id="canvasWrapper" class="flex-1 bg-gray-100 rounded-xl overflow-hidden relative min-h-[400px]">
+                        <!-- Canvas interativo -->
+                        <canvas id="previewCanvas" class="w-full h-full cursor-grab active:cursor-grabbing absolute inset-0 touch-none"></canvas>
+                        
+                        <div id="noPreviewMsg" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm pointer-events-none">
+                            Faça upload do SVG
+                        </div>
+
+                        <!-- Botões de Zoom -->
+                        <div class="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
+                            <button id="zoomInBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Aumentar Zoom">
+                                <i data-lucide="zoom-in" class="w-5 h-5"></i>
+                            </button>
+                            <button id="zoomResetBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Centrar Imagem">
+                                <i data-lucide="maximize" class="w-5 h-5"></i>
+                            </button>
+                            <button id="zoomOutBtn" class="bg-white/90 p-2 rounded shadow text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Diminuir Zoom">
+                                <i data-lucide="zoom-out" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3">
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 h-1 bg-[#10b981] inline-block rounded-sm"></span><span class="font-medium">Traço Ímpar</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 h-1 bg-[#a855f7] inline-block rounded-sm"></span><span class="font-medium">Traço Par</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center text-xs text-gray-500 font-mono bg-gray-50 p-3 rounded-lg" id="statsDisplay">
+                        Aguardando leitura de ficheiro...
+                    </div>
+                </div>
+
+                <!-- Código Gerado -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
+                            <i data-lucide="code-2" class="w-5 h-5 text-indigo-500"></i>
+                            Auto.js Code
+                        </h2>
+                        
+                        <!-- Nome do Ficheiro Dinâmico -->
+                        <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200 px-2 py-1 w-full md:w-auto">
+                            <span class="text-xs text-gray-500 mr-2 whitespace-nowrap"><i data-lucide="file-code" class="w-4 h-4 inline"></i> Nome:</span>
+                            <input type="text" id="jsFileName" value="mandala" class="bg-transparent border-none text-sm outline-none text-indigo-700 font-medium w-full min-w-[100px]">
+                            <span class="text-xs text-gray-500 font-mono">.js</span>
+                        </div>
+                        
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button id="saveBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed">
+                                <i data-lucide="download" class="w-4 h-4"></i> Guardar
+                            </button>
+                            <button id="copyBtn" class="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed">
+                                <i data-lucide="copy" class="w-4 h-4"></i> Copiar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <textarea id="outputCode" readonly placeholder="// O código aparecerá aqui..." class="flex-1 w-full bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-xl border-none outline-none resize-none whitespace-pre overflow-x-auto focus:ring-2 focus:ring-indigo-500 min-h-[250px]"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="svgContainer"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // Variáveis de Estado
+        let finalPathsData = null; 
+        let globalScaledPaths = null;
+        let originalSvgBounds = null; 
+        let isProcessing = false;
+        let currentSvgContent = null;
+        let wakeLock = null; 
+        
+        // Estado do Zoom e Pan
+        let viewScale = 1.0;
+        let viewOffsetX = 0;
+        let viewOffsetY = 0;
+        let isDraggingCanvas = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        // Elementos DOM
+        const fileInput = document.getElementById('fileInput');
+        const jsFileName = document.getElementById('jsFileName');
+        const drawPercent = document.getElementById('drawPercent');
+        const percentValue = document.getElementById('percentValue');
+        const drawSpeed = document.getElementById('drawSpeed');
+        const speedValue = document.getElementById('speedValue');
+        const drawPause = document.getElementById('drawPause');
+        const pauseValue = document.getElementById('pauseValue');
+        const posXInput = document.getElementById('posX');
+        const posYInput = document.getElementById('posY');
+        const stepPrecision = document.getElementById('stepPrecision');
+        const precisionValue = document.getElementById('precisionValue');
+        const turboMode = document.getElementById('turboMode');
+        const wakeLockMode = document.getElementById('wakeLockMode');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const statusMsg = document.getElementById('statusMsg');
+
+        // --- SISTEMA WAKELOCK (Correção para permissões bloqueadas) ---
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator) || !wakeLockMode.checked) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock ativo.');
+            } catch (err) {
+                // NotAllowedError é comum em iframes ou sites sem permissão explícita
+                if (err.name === 'NotAllowedError') {
+                    console.warn('A Permissão de WakeLock foi negada pelo navegador ou plataforma. O processo continuará normalmente.');
+                } else {
+                    console.error(`Erro WakeLock: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                }).catch(() => {});
+            }
+        }
+
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && wakeLockMode.checked) {
+                await requestWakeLock();
+            }
+        });
+
+        // Event Listeners UI
+        drawPercent.addEventListener('input', (e) => { percentValue.textContent = `${e.target.value}%`; if (finalPathsData) updateScaleAndCode(); });
+        drawSpeed.addEventListener('input', (e) => { speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`; if (finalPathsData) updateScaleAndCode(); });
+        drawPause.addEventListener('input', (e) => { pauseValue.textContent = `${e.target.value}ms`; if (finalPathsData) updateScaleAndCode(); });
+        posXInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
+        posYInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
+        turboMode.addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
+        document.getElementById('screenW').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
+        document.getElementById('screenH').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
+        stepPrecision.addEventListener('input', (e) => { precisionValue.textContent = `${e.target.value}px`; });
+        stepPrecision.addEventListener('change', () => { if (currentSvgContent) processSVGasnc(currentSvgContent); });
+
+        // Zoom e Pan
+        function resetZoom() { viewScale = 1.0; viewOffsetX = 0; viewOffsetY = 0; if(globalScaledPaths) drawInteractivePreview(); }
+        document.getElementById('zoomInBtn').addEventListener('click', () => { viewScale *= 1.3; drawInteractivePreview(); });
+        document.getElementById('zoomOutBtn').addEventListener('click', () => { viewScale /= 1.3; drawInteractivePreview(); });
+        document.getElementById('zoomResetBtn').addEventListener('click', resetZoom);
+        canvas.addEventListener('wheel', (e) => { e.preventDefault(); if (e.deltaY < 0) viewScale *= 1.1; else viewScale /= 1.1; drawInteractivePreview(); }, { passive: false });
+
+        const getPos = (e) => {
+            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            return { x: e.clientX, y: e.clientY };
+        };
+        const startPan = (e) => { if(!globalScaledPaths) return; isDraggingCanvas = true; const pos = getPos(e); dragStartX = pos.x - viewOffsetX; dragStartY = pos.y - viewOffsetY; canvas.classList.replace('cursor-grab', 'cursor-grabbing'); };
+        const movePan = (e) => { if (!isDraggingCanvas) return; e.preventDefault(); const pos = getPos(e); viewOffsetX = pos.x - dragStartX; viewOffsetY = pos.y - dragStartY; drawInteractivePreview(); };
+        const endPan = () => { isDraggingCanvas = false; canvas.classList.replace('cursor-grabbing', 'cursor-grab'); };
+        canvas.addEventListener('mousedown', startPan);
+        canvas.addEventListener('mousemove', movePan);
+        canvas.addEventListener('mouseup', endPan);
+        canvas.addEventListener('mouseleave', endPan);
+        canvas.addEventListener('touchstart', startPan, { passive: false });
+        canvas.addEventListener('touchmove', movePan, { passive: false });
+        canvas.addEventListener('touchend', endPan);
+        window.addEventListener('resize', () => { if(globalScaledPaths) drawInteractivePreview(); });
+
+        // Processamento
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                if (!file.name.toLowerCase().endsWith('.svg')) { alert("Apenas ficheiros .svg"); return; }
+                document.getElementById('uploadText').textContent = file.name;
+                jsFileName.value = file.name.replace(/\.[^/.]+$/, "");
+                const reader = new FileReader();
+                reader.onload = (e) => { currentSvgContent = e.target.result; processSVGasnc(currentSvgContent); };
+                reader.readAsText(file);
+            }
+        });
+
+        async function processSVGasnc(svgText) {
+            if (isProcessing) return;
+            isProcessing = true;
+            finalPathsData = null;
+            resetZoom(); 
+            await requestWakeLock();
+            
+            progressContainer.classList.remove('hidden');
+            statusMsg.textContent = "A ler dimensões...";
+            progressBar.style.width = "0%";
+
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgText, "image/svg+xml");
+                const svgElement = doc.querySelector('svg');
+                if (!svgElement) throw new Error("Ficheiro inválido.");
+                svgElement.style.width = '1000px'; svgElement.style.height = '1000px';
+                const container = document.getElementById('svgContainer');
+                container.innerHTML = ''; container.appendChild(svgElement);
+                container.getBoundingClientRect(); 
+
+                const shapes = Array.from(svgElement.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse'));
+                let totalLength = 0; let validShapes = [];
+                for (let i = 0; i < shapes.length; i++) {
+                    try { let len = shapes[i].getTotalLength(); if (len > 0) { validShapes.push({ element: shapes[i], length: len }); totalLength += len; } } catch(e) {}
+                }
+                if (totalLength === 0) throw new Error("Sem contornos visíveis.");
+
+                let extractedPaths = [];
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                const step = parseInt(stepPrecision.value) || 10;
+                let currentLengthProcessed = 0; let totalPointsCounter = 0;
+                const rootCTM = svgElement.getScreenCTM();
+                const inverseRootCTM = rootCTM ? rootCTM.inverse() : null;
+                const svgPt = svgElement.createSVGPoint();
+
+                for (let i = 0; i < validShapes.length; i++) {
+                    const shape = validShapes[i].element;
+                    const length = validShapes[i].length;
+                    let relativeCTM = null;
+                    try { const shapeCTM = shape.getScreenCTM(); if (inverseRootCTM && shapeCTM) relativeCTM = inverseRootCTM.multiply(shapeCTM); } catch(e) {}
+
+                    let currentLine = []; let lastValidPoint = null;
+                    const maxDistSq = (step * 2.5) * (step * 2.5);
+                    let lastYieldTime = performance.now();
+
+                    for (let l = 0; l <= length; l += step) {
+                        let p = shape.getPointAtLength(l);
+                        if (relativeCTM) { svgPt.x = p.x; svgPt.y = p.y; let globalPt = svgPt.matrixTransform(relativeCTM); p = { x: globalPt.x, y: globalPt.y }; }
+
+                        if (!isNaN(p.x) && !isNaN(p.y)) {
+                            if (lastValidPoint) {
+                                let dx = p.x - lastValidPoint.x; let dy = p.y - lastValidPoint.y;
+                                if ((dx * dx + dy * dy) > maxDistSq) { if (currentLine.length > 1) extractedPaths.push(currentLine); currentLine = []; }
+                            }
+                            currentLine.push(p); lastValidPoint = p;
+                            if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                            if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+                        }
+                        currentLengthProcessed += step; totalPointsCounter++;
+                        if (totalPointsCounter % 100 === 0) {
+                            if (performance.now() - lastYieldTime > 15) {
+                                const percent = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
+                                progressBar.style.width = `${percent}%`; progressText.textContent = `${percent}%`;
+                                await new Promise(r => setTimeout(r, 0)); lastYieldTime = performance.now();
+                            }
+                        }
+                    }
+                    if (currentLine.length > 1) extractedPaths.push(currentLine);
+                }
+                finalPathsData = extractedPaths;
+                originalSvgBounds = { minX, minY, maxX, maxY };
+                updateScaleAndCode();
+                progressBar.style.width = "100%"; progressText.textContent = "100%"; statusMsg.textContent = "Mapeado!";
+            } catch (err) { statusMsg.textContent = err.message; } finally { isProcessing = false; releaseWakeLock(); setTimeout(() => progressContainer.classList.add('hidden'), 2500); }
+        }
+        
+        function updateScaleAndCode() {
+            if (!finalPathsData || !originalSvgBounds) return;
+            const screenW = parseInt(document.getElementById('screenW').value) || 1100;
+            const screenH = parseInt(document.getElementById('screenH').value) || 2442;
+            const percent = parseInt(document.getElementById('drawPercent').value) || 70;
+            const speedMultiplier = parseFloat(document.getElementById('drawSpeed').value) || 2.0;
+            const pauseDelay = parseInt(drawPause.value) || 15;
+            const isTurbo = turboMode.checked;
+            const pX = parseInt(posXInput.value) || 50; const pY = parseInt(posYInput.value) || 50;
+            const origW = originalSvgBounds.maxX - originalSvgBounds.minX;
+            const origH = originalSvgBounds.maxY - originalSvgBounds.minY;
+            const targetW = screenW * (percent / 100); const targetH = screenH * (percent / 100);
+            const scale = Math.min(targetW / origW, targetH / origH);
+            const offsetX = (screenW - (origW * scale)) * (pX / 100);
+            const offsetY = (screenH - (origH * scale)) * (pY / 100);
+
+            let totalPointsScaled = 0;
+            globalScaledPaths = finalPathsData.map(path => {
+                totalPointsScaled += path.length;
+                return path.map(p => ({ x: Math.floor((p.x - originalSvgBounds.minX) * scale + offsetX), y: Math.floor((p.y - originalSvgBounds.minY) * scale + offsetY) }));
+            });
+            generateCode(globalScaledPaths, screenW, screenH, speedMultiplier, pauseDelay, isTurbo, totalPointsScaled);
+            drawInteractivePreview();
+        }
+
+        function drawInteractivePreview() {
+            if (!globalScaledPaths) return;
+            document.getElementById('noPreviewMsg').style.display = 'none';
+            canvas.width = canvasWrapper.clientWidth; canvas.height = canvasWrapper.clientHeight;
+            const screenW = parseInt(document.getElementById('screenW').value) || 1100;
+            const screenH = parseInt(document.getElementById('screenH').value) || 2442;
+            const basePreviewScale = Math.min((canvas.width - 40) / screenW, (canvas.height - 40) / screenH);
+            ctx.save();
+            ctx.translate(viewOffsetX, viewOffsetY);
+            ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(viewScale, viewScale); ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            const sw = screenW * basePreviewScale; const sh = screenH * basePreviewScale;
+            const sx = (canvas.width - sw) / 2; const sy = (canvas.height - sh) / 2;
+            ctx.fillStyle = "#1e293b"; ctx.fillRect(sx, sy, sw, sh);
+            ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sx, sy, sw, sh);
+            globalScaledPaths.forEach((path, index) => {
+                ctx.beginPath(); ctx.strokeStyle = index % 2 === 0 ? "#10b981" : "#a855f7"; ctx.lineWidth = Math.max(0.5, 1.5 / viewScale); 
+                path.forEach((p, i) => { if (i === 0) ctx.moveTo(sx + p.x * basePreviewScale, sy + p.y * basePreviewScale); else ctx.lineTo(sx + p.x * basePreviewScale, sy + p.y * basePreviewScale); });
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        function generateCode(paths, screenW, screenH, speedMultiplier, pauseDelay, isTurbo, totalPointsScaled) {
+            let codeLines = []; let tempoTotalMs = 0; const multiplier = 1 / speedMultiplier;
+            codeLines.push(`// --- SCRIPT PERFEITO PARA AUTO.JS ---`);
+            codeLines.push(`setScreenMetrics(${screenW}, ${screenH});\n`);
+            codeLines.push(`var MULTIPLICADOR_TEMPO = ${multiplier.toFixed(3)};\n`);
+            codeLines.push(`function desenharTraco(pontos) {`);
+            if (isTurbo) {
+                codeLines.push(`    var duracaoBase = Math.max(10, pontos.length * 2);`);
+                codeLines.push(`    var duracaoFinal = Math.floor(duracaoBase * MULTIPLICADOR_TEMPO);`);
+                codeLines.push(`    gesture.apply(null, [duracaoFinal].concat(pontos));`);
+                codeLines.push(`    sleep(1);`);
+                paths.forEach(p => tempoTotalMs += Math.floor(Math.max(10, p.length * 2) * multiplier) + 1);
+            } else {
+                codeLines.push(`    var duracaoBase = Math.max(100, pontos.length * 6);`);
+                codeLines.push(`    var duracaoFinal = Math.floor(duracaoBase * MULTIPLICADOR_TEMPO);`);
+                codeLines.push(`    gesture.apply(null, [duracaoFinal].concat(pontos));`);
+                codeLines.push(`    sleep(${pauseDelay});`);
+                paths.forEach(p => tempoTotalMs += Math.floor(Math.max(100, p.length * 6) * multiplier) + pauseDelay);
+            }
+            codeLines.push(`}\n`);
+            codeLines.push(`var linhas = [`);
+            codeLines.push(paths.map(path => `  [${path.map(p => `[${p.x},${p.y}]`).join(',')}]`).join(',\n'));
+            codeLines.push(`];\n`);
+            codeLines.push(`toast("Iniciando..."); for (var i = 0; i < linhas.length; i++) desenharTraco(linhas[i]); toast("Concluído!");`);
+            const finalCode = codeLines.join('\n');
+            document.getElementById('outputCode').value = finalCode;
+            let m = Math.floor(tempoTotalMs / 60000); let s = Math.floor((tempoTotalMs % 60000) / 1000);
+            document.getElementById('statsDisplay').innerHTML = `<div class="flex justify-around items-center w-full gap-2"><span>Traços: <b>${paths.length}</b></span><span>Pontos: <b>${totalPointsScaled}</b></span><span>Tempo: <b>${m > 0 ? m+'m '+s+'s' : s+'s'}</b></span></div>`;
+            lucide.createIcons();
+            const btnCopy = document.getElementById('copyBtn'); const btnSave = document.getElementById('saveBtn');
+            btnCopy.classList.remove('opacity-50', 'cursor-not-allowed'); btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnCopy.onclick = () => { document.getElementById('outputCode').select(); document.execCommand('copy'); btnCopy.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Copiado!`; setTimeout(() => { btnCopy.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> Copiar`; lucide.createIcons(); }, 2000); lucide.createIcons(); };
+            btnSave.onclick = () => {
+                let name = jsFileName.value.trim() || 'mandala'; if (!name.endsWith('.js')) name += '.js';
+                const blob = new Blob([finalCode], { type: 'text/javascript' }); const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+                btnSave.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Guardado!`; setTimeout(() => { btnSave.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Guardar`; lucide.createIcons(); }, 2000); lucide.createIcons();
+            };
+        }
+    </script>
+</body>
+</html>
