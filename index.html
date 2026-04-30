@@ -2,575 +2,1164 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor SVG para Gesture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auto.js Vector Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Bibliotecas Externas (Exportação GIF, Fontes & Fusão Vetorial) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-core.min.js"></script>
+
     <style>
-        .drop-zone { transition: all 0.3s ease; }
-        .drop-zone.dragover { background-color: #EEF2FF; border-color: #4F46E5; }
+        body { background-color: #0f172a; color: #f8fafc; }
+        .panel { background-color: #1e293b; border-color: #334155; }
         canvas {
-            background-color: #111827;
+            background-color: #020617;
             background-image: 
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        #svgContainer {
-            position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none;
-        }
+        #svgHiddenContainer { position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px;}
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .range-sm { height: 4px; accent-color: #6366f1; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-4 md:p-8">
+<body class="min-h-screen font-sans p-2 md:p-4 overflow-x-hidden">
 
-    <div class="max-w-6xl mx-auto space-y-6">
-        <header class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-full mb-2">
-                <i data-lucide="check-circle" class="w-8 h-8 text-emerald-600"></i>
+    <div class="max-w-[1400px] mx-auto space-y-4">
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row items-center justify-between panel p-4 rounded-xl shadow-lg border">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+                    <i data-lucide="compass" class="w-6 h-6 text-indigo-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white leading-tight">Auto.js Vector Studio</h1>
+                    <p class="text-[10px] text-gray-400 font-medium">Composição de Múltiplos SVGs • Texto Vetorial Unido • Exportação GIF</p>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900">Conversor SVG Absoluto</h1>
-            <p class="text-gray-500">Mandalas perfeitas sem travamentos, com barra de progresso</p>
+            <div class="flex items-center gap-3 mt-3 md:mt-0">
+                <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 mr-2"></i>
+                    <span class="text-xs font-medium text-amber-300 mr-2">Turbo</span>
+                    <input type="checkbox" id="turboMode" class="w-3.5 h-3.5 accent-amber-500 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20" title="Une linhas muito próximas num único traço">
+                    <i data-lucide="git-merge" class="w-3.5 h-3.5 text-emerald-400 mr-2"></i>
+                    <span class="text-xs font-medium text-emerald-300 mr-2">Traço Contínuo</span>
+                    <input type="checkbox" id="continuousLine" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <i data-lucide="play-circle" class="w-3.5 h-3.5 text-slate-300 mr-2"></i>
+                    <span class="text-xs font-medium text-slate-300 mr-2">Warmup Inicial</span>
+                    <input type="checkbox" id="warmupMode" checked class="w-3.5 h-3.5 accent-slate-400 rounded cursor-pointer">
+                </label>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
-            <!-- Painel Esquerdo -->
-            <div class="space-y-6">
-                <!-- Upload -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-500"></i>
-                        Ficheiro SVG
-                    </h2>
-                    
-                    <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:bg-gray-50 relative">
-                        <input type="file" id="fileInput" accept=".svg" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <i data-lucide="image" class="w-10 h-10 text-gray-400 mx-auto mb-3"></i>
-                        <p class="text-sm text-gray-600 font-medium" id="uploadText">Clique ou arraste a Mandala aqui</p>
-                    </div>
-                    
-                    <div id="progressContainer" class="mt-4 hidden">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-indigo-600 font-medium" id="statusMsg">A calcular trajetórias...</span>
-                            <span class="text-indigo-600 font-bold" id="progressText">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Configurações -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-5 h-5 text-indigo-500"></i>
-                        Controlo Total
-                    </h2>
-                    
-                    <div class="space-y-5 text-sm">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1">
-                                    Largura (X)
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            A largura exata da ecrã onde o Auto.js vai desenhar.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="number" id="screenW" value="1100" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1">
-                                    Altura (Y)
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            A altura exata da ecrã onde o Auto.js vai desenhar.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="number" id="screenH" value="2442" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="flex items-center">
-                                    Ocupação da Ecrã
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            Tamanho do desenho em relação à ecrã. 100% encosta nas bordas.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </span>
-                                <span id="percentValue" class="text-indigo-600 font-semibold">70%</span>
-                            </label>
-                            <input type="range" id="drawPercent" min="10" max="95" value="70" class="w-full accent-indigo-600">
-                        </div>
-
-                        <!-- Novos Controlos de Posição -->
-                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1 text-xs">
-                                    Mover Esq/Dir
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-3 h-3 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-40 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            Arrasta o desenho horizontalmente. 50% = Centrado.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="range" id="posX" min="0" max="100" value="50" class="w-full accent-indigo-500">
-                            </div>
-                            <div>
-                                <label class="flex items-center text-gray-600 mb-1 text-xs">
-                                    Mover Cima/Baixo
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-3 h-3 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-40 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            Arrasta o desenho verticalmente. 50% = Centrado.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="range" id="posY" min="0" max="100" value="50" class="w-full accent-indigo-500">
-                            </div>
-                        </div>
-
-                        <!-- Velocidade Dinâmica -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="font-medium text-purple-700 flex items-center">
-                                    Velocidade do Robô
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-purple-400 hover:text-purple-600"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            O quão rápido o dedo desliza. Cuidado: excesso de velocidade pode causar falhas no Android.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </span>
-                                <span id="speedValue" class="text-purple-600 font-bold text-xs bg-purple-50 px-2 py-0.5 rounded">2.0x (Rápido)</span>
-                            </label>
-                            <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full accent-purple-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-600 mb-1 flex justify-between">
-                                <span class="flex items-center">
-                                    Precisão dos Pontos
-                                    <div class="group relative inline-block ml-1 cursor-help">
-                                        <i data-lucide="help-circle" class="w-4 h-4 text-gray-400 hover:text-indigo-500"></i>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10 text-center font-normal pointer-events-none">
-                                            Espaço entre cálculos. Valores baixos (ex: 2) dão super detalhe mas podem travar, valores altos (ex: 20) ignoram curvas pequenas.
-                                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                                        </div>
-                                    </div>
-                                </span>
-                                <span id="precisionValue" class="text-gray-500">10px</span>
-                            </label>
-                            <input type="range" id="stepPrecision" min="2" max="30" value="10" class="w-full accent-gray-500">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Preview -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i data-lucide="eye" class="w-5 h-5 text-indigo-500"></i>
-                    Preview do Trajeto
-                </h2>
+            <!-- COLUNA 1: PROJETO E GEOMETRIA -->
+            <div class="lg:col-span-3 space-y-4 flex flex-col">
                 
-                <div class="flex-1 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative min-h-[300px]">
-                    <canvas id="previewCanvas" class="max-w-full max-h-full rounded-lg shadow-inner"></canvas>
-                    <div id="noPreviewMsg" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                        Faça upload do SVG
-                    </div>
-                </div>
-                
-                <!-- Nova Legenda de Cores -->
-                <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3">
-                    <div class="flex items-center gap-1">
-                        <span class="w-3 h-1 bg-[#10b981] inline-block rounded-sm"></span>
-                        <span class="font-medium">Traço Ímpar</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="w-3 h-1 bg-[#a855f7] inline-block rounded-sm"></span>
-                        <span class="font-medium">Traço Par</span>
-                    </div>
-                    <div class="text-gray-400 w-full text-center mt-1 flex items-center justify-center gap-1">
-                        <i data-lucide="info" class="w-3 h-3"></i>
-                        A troca de cor (Verde/Roxo) indica onde o robô irá levantar o dedo do ecrã.
-                    </div>
-                </div>
-
-                <div class="mt-3 text-center text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded-lg" id="statsDisplay">
-                    Aguardando...
-                </div>
-            </div>
-
-            <!-- Código -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold flex items-center gap-2">
-                        <i data-lucide="code-2" class="w-5 h-5 text-indigo-500"></i>
-                        Auto.js Code
+                <!-- Gestor de Ficheiros & Texto -->
+                <div class="panel p-4 rounded-xl shadow-lg border flex flex-col gap-3">
+                    <h2 class="text-sm font-bold text-gray-200 flex items-center gap-2">
+                        <i data-lucide="folder-open" class="w-4 h-4 text-indigo-400"></i> Arquivos do Projeto
                     </h2>
-                    <button id="copyBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed">
-                        <i data-lucide="copy" class="w-4 h-4"></i> Copiar
+                    
+                    <div id="projectItemsList" class="flex flex-col gap-1.5 max-h-32 overflow-y-auto custom-scrollbar">
+                        <div id="emptyProjectMsg" class="text-[10px] text-gray-500 text-center py-2 border border-dashed border-gray-600 rounded">Nenhum elemento no projeto.</div>
+                    </div>
+
+                    <button id="addSvgBtn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded flex items-center justify-center gap-2 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i> Importar SVG
                     </button>
+                    <input type="file" id="fileInput" multiple accept=".svg" class="hidden">
+                    
+                    <!-- Novo Módulo de Texto -->
+                    <div class="pt-3 border-t border-slate-700 space-y-2">
+                        <h3 class="text-xs font-bold text-gray-300 flex items-center gap-1">
+                            <i data-lucide="type" class="w-3.5 h-3.5 text-emerald-400"></i> Adicionar Texto Vetorial
+                        </h3>
+                        <input type="text" id="newTextInput" placeholder="Digite seu texto..." class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white text-xs">
+                        <div class="flex gap-2">
+                            <select id="newTextFont" class="flex-1 bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white text-[10px]">
+                                <option value="https://raw.githubusercontent.com/google/fonts/main/ofl/pacifico/Pacifico-Regular.ttf">Pacifico (Manuscrita)</option>
+                                <option value="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf">Roboto (Moderna)</option>
+                                <option value="https://raw.githubusercontent.com/google/fonts/main/ofl/lobster/Lobster-Regular.ttf">Lobster (Elegante)</option>
+                                <option value="https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Ubuntu/ubuntu-regular-webfont.ttf">Ubuntu (Clássica)</option>
+                            </select>
+                            <button id="addTextBtn" class="px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded transition-colors shadow">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="progressContainer" class="hidden mt-1">
+                        <div class="flex justify-between text-[10px] mb-1">
+                            <span class="text-indigo-400 font-medium" id="statusMsg">Processando...</span>
+                            <span class="text-indigo-400 font-bold" id="progressText">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-1.5">
+                            <div id="progressBar" class="bg-indigo-500 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Transformação Individual -->
+                <div id="itemTransformPanel" class="panel p-4 rounded-xl shadow-lg border space-y-4 opacity-50 pointer-events-none transition-opacity">
+                    <h2 class="text-sm font-bold text-gray-200 border-b border-slate-600 pb-2 flex justify-between items-center">
+                        <span class="flex items-center gap-2">
+                            Transformação
+                            <button id="resetGeoBtn" class="text-indigo-400 hover:text-indigo-300" title="Resetar Transformações"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
+                        </span>
+                        <span id="activeItemName" class="text-[9px] font-mono text-indigo-300 truncate max-w-[100px]">Nenhum</span>
+                    </h2>
+                    
+                    <!-- Aba Dinâmica para Edição de Texto -->
+                    <div id="textEditGroup" class="hidden space-y-2 pb-3 mb-3 border-b border-slate-700">
+                        <label class="block text-emerald-400 font-bold text-xs">Editar Conteúdo do Texto</label>
+                        <input type="text" id="editTextInput" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white text-xs">
+                        <select id="editTextFont" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white text-[10px]">
+                            <option value="https://raw.githubusercontent.com/google/fonts/main/ofl/pacifico/Pacifico-Regular.ttf">Pacifico (Manuscrita)</option>
+                            <option value="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf">Roboto (Moderna)</option>
+                            <option value="https://raw.githubusercontent.com/google/fonts/main/ofl/lobster/Lobster-Regular.ttf">Lobster (Elegante)</option>
+                            <option value="https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Ubuntu/ubuntu-regular-webfont.ttf">Ubuntu (Clássica)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs text-gray-400">
+                        <div><label class="flex justify-between mb-1"><span>Pos X (Local)</span><span id="itemXVal" class="text-indigo-300">0px</span></label><input type="range" id="itemX" min="-621" max="621" value="0" class="w-full range-sm"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos Y (Local)</span><span id="itemYVal" class="text-indigo-300">0px</span></label><input type="range" id="itemY" min="-621" max="621" value="0" class="w-full range-sm"></div>
+                        <div class="col-span-2">
+                            <label class="flex justify-between mb-1"><span class="font-bold text-indigo-400">Escala Geral</span><span id="itemScaleVal" class="text-indigo-400 font-bold">1.0x</span></label>
+                            <input type="range" id="itemScale" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-indigo-500">
+                        </div>
+                        <div><label class="block mb-1">Escala X</label><input type="range" id="itemScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm"></div>
+                        <div><label class="block mb-1">Escala Y</label><input type="range" id="itemScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm"></div>
+                        <div class="col-span-2">
+                            <label class="flex justify-between mb-1"><span>Rotação</span><span id="itemRotVal">0°</span></label>
+                            <input type="range" id="itemRot" min="0" max="360" value="0" class="w-full range-sm">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="itemFlipX" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1"><i data-lucide="flip-horizontal" class="w-3.5 h-3.5"></i> Espelhar X</button>
+                        <button id="itemFlipY" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1"><i data-lucide="flip-vertical" class="w-3.5 h-3.5"></i> Espelhar Y</button>
+                    </div>
+                </div>
+
+                <!-- Configurações Globais -->
+                <div class="panel p-4 rounded-xl shadow-lg border space-y-3 text-xs text-gray-400">
+                    <h2 class="text-sm font-bold text-gray-200 border-b border-slate-600 pb-2">Ambiente & Robô</h2>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="block mb-1">Ecrã X</label><input type="number" id="screenW" value="1100" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
+                        <div><label class="block mb-1">Ecrã Y</label><input type="number" id="screenH" value="2442" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
+                        <div><label class="flex justify-between mb-1 text-emerald-400 font-bold"><span>Câmara X</span><span id="posXVal" class="text-emerald-300">0%</span></label><input type="range" id="posX" min="-500" max="500" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        <div><label class="flex justify-between mb-1 text-emerald-400 font-bold"><span>Câmara Y</span><span id="posYVal" class="text-emerald-300">0%</span></label><input type="range" id="posY" min="-500" max="500" value="0" class="w-full range-sm accent-emerald-500"></div>
+                    </div>
+
+                    <div><label class="flex justify-between mb-1"><span>Ocupação Total</span><span id="percentValue">70%</span></label><input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full range-sm"></div>
+                    <div><label class="flex justify-between mb-1"><span>Margem Posição</span><span id="marginValue">20px</span></label><input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full range-sm"></div>
+                    <div><label class="flex justify-between mb-1 text-purple-400 font-bold"><span>Velocidade</span><span id="speedValue">2.0x</span></label><input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full range-sm accent-purple-500"></div>
+                    <div><label class="flex justify-between mb-1 text-pink-400"><span>Pausa Levantar Dedo</span><span id="pauseValue">35ms</span></label><input type="range" id="drawPause" min="10" max="500" step="5" value="35" class="w-full range-sm accent-pink-500"></div>
+                    <div><label class="flex justify-between mb-1 text-sky-400"><span>Precisão Extrema (Step)</span><span id="precisionValue">3px</span></label><input type="range" id="stepPrecision" min="1" max="20" value="3" class="w-full range-sm accent-sky-500"></div>
+                </div>
+            </div>
+
+            <!-- COLUNA 2: PREVIEW ANIMADO -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
                 
-                <textarea id="outputCode" readonly placeholder="// O código aparecerá aqui..." class="flex-1 w-full bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-xl border-none outline-none resize-none whitespace-pre overflow-x-auto focus:ring-2 focus:ring-indigo-500 min-h-[300px]"></textarea>
+                <div class="panel p-4 rounded-xl shadow-lg border flex-1 flex flex-col relative min-h-[500px]">
+                    <div class="flex justify-between items-center mb-2 z-10">
+                        <h2 class="text-sm font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="eye" class="w-4 h-4 text-indigo-400"></i> Viewport
+                        </h2>
+                        <div class="flex gap-2">
+                            <button id="playBtn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition"><i data-lucide="play" class="w-3.5 h-3.5"></i> Simular</button>
+                            <button id="stopBtn" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition hidden"><i data-lucide="square" class="w-3.5 h-3.5"></i> Parar</button>
+                            <button id="exportGifBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition"><i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação</button>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute top-16 right-6 z-10 flex gap-1 flex-col">
+                        <button id="zoomInBtn" class="bg-slate-800 p-1.5 rounded border border-slate-600 text-gray-300 hover:text-white"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                        <button id="zoomResetBtn" class="bg-slate-800 p-1.5 rounded border border-slate-600 text-gray-300 hover:text-white"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                        <button id="zoomOutBtn" class="bg-slate-800 p-1.5 rounded border border-slate-600 text-gray-300 hover:text-white"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                    </div>
+                    
+                    <div id="canvasWrapper" class="flex-1 rounded-xl overflow-hidden relative border border-slate-700 bg-slate-900">
+                        <canvas id="previewCanvas" class="w-full h-full cursor-grab active:cursor-grabbing absolute inset-0 touch-none"></canvas>
+                        <div id="noPreviewMsg" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm pointer-events-none">
+                            Área de Desenho Livre
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex items-center justify-between text-[10px] font-medium text-gray-500">
+                        <span>Fundo (Claro)</span>
+                        <div class="flex-1 mx-2 h-1.5 rounded-full" style="background: linear-gradient(to right, hsl(280, 80%, 80%), hsl(280, 80%, 30%))"></div>
+                        <span>Topo (Escuro)</span>
+                    </div>
+                    <div id="statsDisplay" class="mt-2 text-center text-[10px] text-gray-400 font-mono">Aguardando composição...</div>
+                </div>
+
+            </div>
+
+            <!-- COLUNA 3: CAMADAS E CÓDIGO FINAL -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                
+                <!-- Gestor de Camadas -->
+                <div class="panel p-3 rounded-xl shadow-lg border flex flex-col h-[250px]">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="list-tree" class="w-4 h-4 text-indigo-400"></i> Ordem das Camadas
+                        </h2>
+                        <button id="mergeBtn" class="text-[10px] px-2 py-1 bg-slate-700 text-gray-300 rounded hover:bg-slate-600 transition flex items-center gap-1 disabled:opacity-30">
+                            <i data-lucide="combine" class="w-3 h-3"></i> Mesclar Sel.
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-12 gap-1 px-1 pb-1 text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-slate-700">
+                        <div class="col-span-1 text-center">Sel</div>
+                        <div class="col-span-1 text-center">Vis</div>
+                        <div class="col-span-5">Nome</div>
+                        <div class="col-span-3 text-center">Delay(s)</div>
+                        <div class="col-span-2 text-center">Ord</div>
+                    </div>
+
+                    <div id="layersList" class="flex-1 overflow-y-auto custom-scrollbar pt-1 space-y-1">
+                        <div class="text-center text-xs text-gray-600 mt-8">Sem dados geográficos.</div>
+                    </div>
+                </div>
+
+                <!-- Código -->
+                <div class="panel p-4 rounded-xl shadow-lg border flex flex-col flex-1 h-[300px] lg:h-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold flex items-center gap-2 text-emerald-400 whitespace-nowrap">
+                            <i data-lucide="file-json" class="w-4 h-4"></i> Script Output
+                        </h2>
+                        <div class="flex gap-2">
+                            <button id="saveBtn" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-gray-200 rounded flex items-center gap-1 text-[10px] transition"><i data-lucide="download" class="w-3 h-3"></i> Salvar</button>
+                            <button id="copyBtn" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-gray-200 rounded flex items-center gap-1 text-[10px] transition"><i data-lucide="copy" class="w-3 h-3"></i> Copiar</button>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" id="jsFileName" value="composicao_vetorial" class="w-full text-[10px] font-mono bg-slate-800 border border-slate-700 rounded p-1 outline-none text-emerald-400">
+                    </div>
+                    <textarea id="outputCode" readonly placeholder="// Código gerado dinamicamente..." class="flex-1 w-full bg-[#0d1117] text-[#56d364] font-mono text-[9px] p-3 rounded-lg border border-slate-800 outline-none resize-none whitespace-pre overflow-x-auto custom-scrollbar"></textarea>
+                </div>
+
             </div>
 
         </div>
     </div>
 
-    <div id="svgContainer"></div>
+    <div id="svgHiddenContainer"></div>
 
     <script>
         lucide.createIcons();
 
-        // Elementos DOM
-        const fileInput = document.getElementById('fileInput');
-        const drawPercent = document.getElementById('drawPercent');
-        const percentValue = document.getElementById('percentValue');
-        const drawSpeed = document.getElementById('drawSpeed');
-        const speedValue = document.getElementById('speedValue');
-        const posXInput = document.getElementById('posX');
-        const posYInput = document.getElementById('posY');
-        const stepPrecision = document.getElementById('stepPrecision');
-        const precisionValue = document.getElementById('precisionValue');
-        const canvas = document.getElementById('previewCanvas');
-        const ctx = canvas.getContext('2d');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const statusMsg = document.getElementById('statusMsg');
+        // Inicializa o ambiente da Paper.js de forma Headless para fusão de curvas complexas (Letras que se tocam)
+        const dummyCanvas = document.createElement('canvas');
+        dummyCanvas.width = 1; dummyCanvas.height = 1;
+        paper.setup(dummyCanvas);
+
+        // ==========================================
+        // ESTADO GLOBAL E ARQUITETURA
+        // ==========================================
+        let projectItems = [];
+        let activeItemId = null;
+        let rawLayers = []; 
+        let scaledLayers = []; 
+        let globalScaledTraces = []; 
         
-        let finalPathsData = null; 
-        let originalSvgBounds = null; 
+        let viewScale = 1.0, viewOffsetX = 0, viewOffsetY = 0;
+        let isDraggingCanvas = false, dragStartX = 0, dragStartY = 0;
+        let animReqId = null, isAnimating = false;
+
         let isProcessing = false;
-        let currentSvgContent = null;
+        let wakeLock = null; 
 
-        drawPercent.addEventListener('input', (e) => {
-            percentValue.textContent = `${e.target.value}%`;
-            if (finalPathsData) updateScaleAndCode();
-        });
+        let isRecordingGif = false;
+        let gifEncoder = null;
+        let lastGifFrameTime = 0;
 
-        drawSpeed.addEventListener('input', (e) => {
-            speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`;
-            if (finalPathsData) updateScaleAndCode();
-        });
-
-        // Listeners para os novos sliders de posição X e Y
-        posXInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
-        posYInput.addEventListener('input', () => { if(finalPathsData) updateScaleAndCode(); });
-
-        stepPrecision.addEventListener('input', (e) => {
-            precisionValue.textContent = `${e.target.value}px`;
-        });
-        
-        stepPrecision.addEventListener('change', () => {
-             if (currentSvgContent) processSVGasnc(currentSvgContent);
-        });
-        document.getElementById('screenW').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
-        document.getElementById('screenH').addEventListener('change', () => { if(finalPathsData) updateScaleAndCode(); });
-
-        fileInput.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                const file = this.files[0];
-                document.getElementById('uploadText').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    currentSvgContent = e.target.result;
-                    processSVGasnc(currentSvgContent);
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        async function processSVGasnc(svgText) {
-            if (isProcessing) return;
-            isProcessing = true;
-            finalPathsData = null;
+        // DOM Els
+        const els = {
+            addSvgBtn: document.getElementById('addSvgBtn'), fileInput: document.getElementById('fileInput'),
+            projectItemsList: document.getElementById('projectItemsList'), emptyProjectMsg: document.getElementById('emptyProjectMsg'),
             
-            progressContainer.classList.remove('hidden');
-            statusMsg.textContent = "A ler dimensões da imagem...";
-            progressBar.style.width = "0%";
-            progressText.textContent = "0%";
+            // Novos elementos de Texto
+            newTextInput: document.getElementById('newTextInput'), newTextFont: document.getElementById('newTextFont'), addTextBtn: document.getElementById('addTextBtn'),
+            textEditGroup: document.getElementById('textEditGroup'), editTextInput: document.getElementById('editTextInput'), editTextFont: document.getElementById('editTextFont'),
+
+            itemTransformPanel: document.getElementById('itemTransformPanel'), activeItemName: document.getElementById('activeItemName'),
+            itemX: document.getElementById('itemX'), itemY: document.getElementById('itemY'),
+            itemXVal: document.getElementById('itemXVal'), itemYVal: document.getElementById('itemYVal'),
+            itemScale: document.getElementById('itemScale'), itemScaleVal: document.getElementById('itemScaleVal'),
+            itemScaleX: document.getElementById('itemScaleX'), itemScaleY: document.getElementById('itemScaleY'),
+            itemRot: document.getElementById('itemRot'), itemRotVal: document.getElementById('itemRotVal'),
+            itemFlipX: document.getElementById('itemFlipX'), itemFlipY: document.getElementById('itemFlipY'),
+            
+            screenW: document.getElementById('screenW'), screenH: document.getElementById('screenH'),
+            drawPercent: document.getElementById('drawPercent'), percentValue: document.getElementById('percentValue'),
+            drawMargin: document.getElementById('drawMargin'), marginValue: document.getElementById('marginValue'),
+            drawSpeed: document.getElementById('drawSpeed'), speedValue: document.getElementById('speedValue'),
+            drawPause: document.getElementById('drawPause'), pauseValue: document.getElementById('pauseValue'),
+            stepPrecision: document.getElementById('stepPrecision'), precisionValue: document.getElementById('precisionValue'),
+            turboMode: document.getElementById('turboMode'), continuousLine: document.getElementById('continuousLine'), warmupMode: document.getElementById('warmupMode'),
+            wakeLockMode: document.getElementById('wakeLockMode'), posXInput: document.getElementById('posX'), posYInput: document.getElementById('posY'),
+            posXVal: document.getElementById('posXVal'), posYVal: document.getElementById('posYVal'),
+            
+            layersList: document.getElementById('layersList'), mergeBtn: document.getElementById('mergeBtn'),
+            canvasWrapper: document.getElementById('canvasWrapper'), canvas: document.getElementById('previewCanvas'),
+            playBtn: document.getElementById('playBtn'), stopBtn: document.getElementById('stopBtn'), exportGifBtn: document.getElementById('exportGifBtn'),
+            outputCode: document.getElementById('outputCode'), statsDisplay: document.getElementById('statsDisplay'),
+            progContainer: document.getElementById('progressContainer'), progBar: document.getElementById('progressBar'), progText: document.getElementById('progressText'),
+            statusMsg: document.getElementById('statusMsg'), jsFileName: document.getElementById('jsFileName'),
+            resetGeoBtn: document.getElementById('resetGeoBtn')
+        };
+        const ctx = els.canvas.getContext('2d');
+
+        // ==========================================
+        // WAKELOCK
+        // ==========================================
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator) || !els.wakeLockMode.checked) return;
+            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { els.wakeLockMode.checked = false; els.wakeLockMode.disabled = true; }
+        }
+        function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(() => {}); } }
+        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && els.wakeLockMode.checked) await requestWakeLock(); });
+
+        // ==========================================
+        // GESTOR DE PROJETO (TEXTO E SVGs)
+        // ==========================================
+        
+        // 1. IMPORTAR SVG NATIVO
+        els.addSvgBtn.onclick = () => els.fileInput.click();
+        els.fileInput.onchange = async (e) => {
+            if(!e.target.files.length) return;
+            for(let file of e.target.files) {
+                if(!file.name.toLowerCase().endsWith('.svg')) continue;
+                const text = await file.text();
+                const id = 'item_' + Date.now() + Math.floor(Math.random()*1000);
+                
+                projectItems.push({
+                    id, name: file.name, content: text,
+                    x: 0, y: 0, scaleX: 1, scaleY: 1, rot: 0, flipX: false, flipY: false,
+                    basePaths: [], cx: 0, cy: 0, isText: false
+                });
+                activeItemId = id;
+                await extractBasePaths(id);
+            }
+            e.target.value = ''; 
+        };
+
+        // 2. IMPORTAR TEXTO COMO SVG (Unido com PaperJS)
+        function textToSvgString(text, fontUrl) {
+            return new Promise((resolve, reject) => {
+                if(!text.trim()) return reject("Texto vazio.");
+                
+                const makeSvg = (font) => {
+                    // Separa o contorno de cada letra original usando a biblioteca OpenType
+                    const glyphPaths = font.getPaths(text, 0, 0, 100);
+                    let finalPaperPath = null;
+                    
+                    glyphPaths.forEach(gp => {
+                        const d = gp.toPathData(2);
+                        if (!d || d === "") return;
+                        
+                        try {
+                            // Cria um caminho da letra e FAZ UNIÃO com as letras anteriores!
+                            // Isto garante que uma fonte cursiva gere UM único contorno e não rabisque por cima.
+                            const pPath = new paper.CompoundPath(d);
+                            if (!finalPaperPath) {
+                                finalPaperPath = pPath;
+                            } else {
+                                const united = finalPaperPath.unite(pPath);
+                                finalPaperPath.remove(); // Limpa as memórias cruzadas
+                                pPath.remove();
+                                finalPaperPath = united;
+                            }
+                        } catch(e) { console.warn("Erro a fundir letra", e); }
+                    });
+
+                    if (!finalPaperPath) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>`;
+
+                    const d = finalPaperPath.pathData;
+                    const bounds = finalPaperPath.bounds;
+                    const padding = 10;
+                    const vx = bounds.x - padding; const vy = bounds.y - padding;
+                    const vw = bounds.width + padding * 2; const vh = bounds.height + padding * 2;
+                    
+                    // Limpar buffer da ferramenta PaperJS
+                    finalPaperPath.remove();
+                    paper.project.clear();
+
+                    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx} ${vy} ${vw} ${vh}"><path d="${d}" fill="none" stroke="black"/></svg>`;
+                };
+
+                opentype.load(fontUrl, function(err, font) {
+                    if (err) {
+                        console.warn("Falha ao carregar fonte original, a usar fallback Roboto...", err);
+                        opentype.load('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', function(err2, fallbackFont) {
+                            if (err2) return reject(err2);
+                            resolve(makeSvg(fallbackFont));
+                        });
+                    } else {
+                        resolve(makeSvg(font));
+                    }
+                });
+            });
+        }
+
+        els.addTextBtn.onclick = async () => {
+            const text = els.newTextInput.value.trim();
+            const font = els.newTextFont.value;
+            if(!text) return;
+
+            isProcessing = true; els.progContainer.classList.remove('hidden');
+            els.statusMsg.textContent = "A fundir e desenhar texto..."; els.progBar.style.width = "20%";
 
             try {
+                const svgString = await textToSvgString(text, font);
+                const id = 'item_' + Date.now() + Math.floor(Math.random()*1000);
+                
+                projectItems.push({
+                    id, name: `Texto: ${text.substring(0,8)}`, content: svgString,
+                    x: 0, y: 0, scaleX: 1, scaleY: 1, rot: 0, flipX: false, flipY: false,
+                    basePaths: [], cx: 0, cy: 0, 
+                    isText: true, textContent: text, fontUrl: font
+                });
+                activeItemId = id;
+                els.newTextInput.value = ''; // limpa
+                await extractBasePaths(id);
+            } catch(e) {
+                console.error(e);
+                els.statusMsg.textContent = "Erro na Fonte!";
+                isProcessing = false; setTimeout(() => els.progContainer.classList.add('hidden'), 2000);
+            }
+        };
+
+        // 3. ATUALIZAR ITEM DE TEXTO EXISTENTE
+        const handleTextEdit = async () => {
+            const inst = projectItems.find(i => i.id === activeItemId);
+            if(!inst || !inst.isText) return;
+            
+            const newText = els.editTextInput.value.trim();
+            const newFont = els.editTextFont.value;
+            if(!newText || (newText === inst.textContent && newFont === inst.fontUrl)) return;
+
+            isProcessing = true; els.progContainer.classList.remove('hidden');
+            els.statusMsg.textContent = "A atualizar e fundir curvas do texto..."; els.progBar.style.width = "40%";
+
+            try {
+                inst.textContent = newText; inst.fontUrl = newFont;
+                inst.name = `Texto: ${newText.substring(0,8)}`;
+                inst.content = await textToSvgString(newText, newFont);
+                
+                // Apaga antigas camadas associadas e volta a extrair
+                rawLayers = rawLayers.filter(l => l.itemId !== inst.id);
+                await extractBasePaths(inst.id);
+            } catch(e) {
+                console.error(e);
+                els.statusMsg.textContent = "Erro ao atualizar texto!";
+                isProcessing = false; setTimeout(() => els.progContainer.classList.add('hidden'), 2000);
+            }
+        };
+        els.editTextInput.addEventListener('change', handleTextEdit);
+        els.editTextFont.addEventListener('change', handleTextEdit);
+
+
+        function renderProjectItems() {
+            els.projectItemsList.innerHTML = '';
+            els.emptyProjectMsg.style.display = projectItems.length ? 'none' : 'block';
+            
+            projectItems.forEach(item => {
+                const div = document.createElement('div');
+                const isActive = activeItemId === item.id;
+                div.className = `p-2 rounded text-xs cursor-pointer flex justify-between items-center transition ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}`;
+                
+                const nameSpan = document.createElement('span'); 
+                nameSpan.innerHTML = item.isText ? `<i data-lucide="type" class="w-3 h-3 inline mr-1"></i>${item.name}` : `<i data-lucide="image" class="w-3 h-3 inline mr-1"></i>${item.name}`;
+                nameSpan.className = 'truncate max-w-[150px] flex items-center';
+                
+                const delBtn = document.createElement('button'); delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3 h-3"></i>';
+                delBtn.className = `p-1 rounded ${isActive ? 'hover:bg-indigo-500' : 'hover:bg-rose-500 hover:text-white'}`;
+                delBtn.onclick = (e) => { e.stopPropagation(); deleteItem(item.id); };
+
+                div.onclick = () => { activeItemId = item.id; renderProjectItems(); };
+                div.appendChild(nameSpan); div.appendChild(delBtn);
+                els.projectItemsList.appendChild(div);
+            });
+            lucide.createIcons();
+            loadItemTransforms();
+        }
+
+        function deleteItem(id) {
+            projectItems = projectItems.filter(i => i.id !== id);
+            rawLayers = rawLayers.filter(l => l.itemId !== id);
+            if(activeItemId === id) activeItemId = projectItems.length ? projectItems[0].id : null;
+            renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
+        }
+
+        // ==========================================
+        // EXTRACÇÃO DE BASE (DOM -> JS)
+        // ==========================================
+        async function extractBasePaths(itemId) {
+            const item = projectItems.find(i => i.id === itemId);
+            if(!item) return;
+            
+            try {
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(svgText, "image/svg+xml");
-                const svgElement = doc.querySelector('svg');
+                const doc = parser.parseFromString(item.content, "image/svg+xml");
+                const svgEl = doc.querySelector('svg');
+                if (!svgEl) throw new Error("SVG inválido.");
                 
-                if (!svgElement) throw new Error("Ficheiro inválido.");
-
-                svgElement.style.width = '1000px';
-                svgElement.style.height = '1000px';
-
-                const container = document.getElementById('svgContainer');
-                container.innerHTML = '';
-                container.appendChild(svgElement);
-                container.getBoundingClientRect(); 
-
-                const shapes = Array.from(svgElement.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse'));
-                
-                // FASE 1: Calcular comprimento total para a barra de progresso real
-                let totalLength = 0;
-                let validShapes = [];
-                for (let i = 0; i < shapes.length; i++) {
-                    try {
-                        let len = shapes[i].getTotalLength();
-                        if (len > 0) {
-                            validShapes.push({ element: shapes[i], length: len });
-                            totalLength += len;
-                        }
-                    } catch(e) {}
+                for(let depth = 0; depth < 5; depth++) {
+                    const useElements = Array.from(svgEl.querySelectorAll('use'));
+                    if(useElements.length === 0) break;
+                    useElements.forEach(useEl => {
+                        try {
+                            const href = useEl.getAttribute('href') || useEl.getAttribute('xlink:href');
+                            if (href && href.startsWith('#')) {
+                                const target = svgEl.querySelector(href);
+                                if (target) {
+                                    const clone = target.cloneNode(true); clone.removeAttribute('id');
+                                    const x = parseFloat(useEl.getAttribute('x')) || 0; const y = parseFloat(useEl.getAttribute('y')) || 0;
+                                    let transform = useEl.getAttribute('transform') || '';
+                                    if (x !== 0 || y !== 0) transform = `translate(${x}, ${y}) ` + transform;
+                                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                                    g.setAttribute('transform', transform); g.appendChild(clone);
+                                    useEl.parentNode.replaceChild(g, useEl);
+                                } else useEl.remove();
+                            } else useEl.remove();
+                        } catch(e) {}
+                    });
                 }
-
-                if (totalLength === 0) throw new Error("Desenho sem contornos visíveis.");
-
-                // FASE 2: Processamento Assíncrono com Deteção de Salto
-                statusMsg.textContent = "A extrair geometria com precisão...";
-                let extractedPaths = [];
-                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                const step = parseInt(stepPrecision.value) || 10;
                 
-                let currentLengthProcessed = 0;
-                let totalPointsCounter = 0;
+                const paths = Array.from(svgEl.querySelectorAll('path'));
+                paths.forEach(path => {
+                    const d = path.getAttribute('d'); if (!d) return;
+                    const parts = d.replace(/([Mm])/g, '|$1').split('|').filter(p => p.trim().length > 0);
+                    if (parts.length > 1) {
+                        const parent = path.parentNode;
+                        parts.forEach(part => {
+                            const newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            Array.from(path.attributes).forEach(attr => { if (attr.name !== 'd' && attr.name !== 'id') newPath.setAttribute(attr.name, attr.value); });
+                            newPath.setAttribute('d', part); parent.insertBefore(newPath, path);
+                        });
+                        path.remove();
+                    }
+                });
 
-                const rootCTM = svgElement.getScreenCTM();
-                const inverseRootCTM = rootCTM ? rootCTM.inverse() : null;
-                const svgPt = svgElement.createSVGPoint();
+                let vW = 1000, vH = 1000;
+                if(svgEl.hasAttribute("viewBox")) {
+                    const vb = svgEl.getAttribute("viewBox").split(/\s+|,/);
+                    if(vb.length === 4) { vW = parseFloat(vb[2]); vH = parseFloat(vb[3]); }
+                } else {
+                    if(svgEl.hasAttribute("width")) vW = parseFloat(svgEl.getAttribute("width"));
+                    if(svgEl.hasAttribute("height")) vH = parseFloat(svgEl.getAttribute("height"));
+                }
+                svgEl.style.width = vW + 'px'; svgEl.style.height = vH + 'px'; 
+
+                document.getElementById('svgHiddenContainer').innerHTML = ''; 
+                document.getElementById('svgHiddenContainer').appendChild(svgEl);
+                svgEl.getBoundingClientRect(); 
+
+                const shapes = Array.from(svgEl.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse'));
+                
+                let totalLength = 0; let validShapes = [];
+                for (let i = 0; i < shapes.length; i++) {
+                    try { let len = shapes[i].getTotalLength(); if (len > 0 && Number.isFinite(len)) { validShapes.push({ el: shapes[i], len: len }); totalLength += len; } } catch(e) {}
+                }
+                if (totalLength === 0) throw new Error("Sem contornos visíveis.");
+
+                const baseStep = 2; 
+                let basePaths = [];
+                let localMinX = Infinity, localMinY = Infinity, localMaxX = -Infinity, localMaxY = -Infinity;
+
+                const rootCTM = svgEl.getScreenCTM();
+                const invRootCTM = rootCTM ? rootCTM.inverse() : null;
+                const svgPt = svgEl.createSVGPoint();
+
+                let layerCount = 1;
+                let currentLengthProcessed = 0; let pointCounter = 0;
+                let lastYield = performance.now();
 
                 for (let i = 0; i < validShapes.length; i++) {
-                    const shape = validShapes[i].element;
-                    const length = validShapes[i].length;
-
-                    // Lógica de matriz global para manter o alinhamento
-                    let relativeCTM = null;
-                    try {
-                        const shapeCTM = shape.getScreenCTM();
-                        if (inverseRootCTM && shapeCTM) {
-                            relativeCTM = inverseRootCTM.multiply(shapeCTM);
-                        }
-                    } catch(e) {}
+                    let shape = validShapes[i].el;
+                    let length = validShapes[i].len;
+                    let relCTM = null;
+                    try { const shapeCTM = shape.getScreenCTM(); if (invRootCTM && shapeCTM) relCTM = invRootCTM.multiply(shapeCTM); } catch(e) {}
+                    if (!relCTM) continue;
 
                     let currentLine = [];
-                    let lastValidPoint = null;
-                    
-                    // OTIMIZAÇÃO: Calculamos o quadrado da distância limite fora do loop (muito mais rápido)
-                    const maxDistSq = (step * 2.5) * (step * 2.5);
-                    let lastYieldTime = performance.now();
-
-                    for (let l = 0; l <= length; l += step) {
-                        let p = shape.getPointAtLength(l);
-
-                        if (relativeCTM) {
-                            svgPt.x = p.x;
-                            svgPt.y = p.y;
-                            let globalPt = svgPt.matrixTransform(relativeCTM);
-                            p = { x: globalPt.x, y: globalPt.y };
-                        }
-
-                        if (!isNaN(p.x) && !isNaN(p.y)) {
-                            
-                            // A INTELIGÊNCIA DE SALTO (Sem o peso do Math.sqrt)
-                            if (lastValidPoint) {
-                                let dx = p.x - lastValidPoint.x;
-                                let dy = p.y - lastValidPoint.y;
-                                
-                                // Mais de 10x mais rápido que calcular a raiz quadrada!
-                                if ((dx * dx + dy * dy) > maxDistSq) {
-                                    if (currentLine.length > 1) extractedPaths.push(currentLine);
-                                    currentLine = []; 
-                                }
+                    const processPt = (l) => {
+                        try {
+                            if (!Number.isFinite(l)) return; 
+                            let pLocal = shape.getPointAtLength(l);
+                            if (!isNaN(pLocal.x) && !isNaN(pLocal.y) && Number.isFinite(pLocal.x) && Number.isFinite(pLocal.y)) {
+                                svgPt.x = pLocal.x; svgPt.y = pLocal.y; 
+                                let globalPt = svgPt.matrixTransform(relCTM); 
+                                let pScreen = { x: globalPt.x, y: globalPt.y }; 
+                                currentLine.push(pScreen); 
+                                if(pScreen.x < localMinX) localMinX = pScreen.x; if(pScreen.x > localMaxX) localMaxX = pScreen.x;
+                                if(pScreen.y < localMinY) localMinY = pScreen.y; if(pScreen.y > localMaxY) localMaxY = pScreen.y;
                             }
+                        } catch (e) {}
+                    };
 
-                            currentLine.push(p);
-                            lastValidPoint = p;
-
-                            if (p.x < minX) minX = p.x;
-                            if (p.x > maxX) maxX = p.x;
-                            if (p.y < minY) minY = p.y;
-                            if (p.y > maxY) maxY = p.y;
-                        }
-
-                        // O SEGREDO DA VELOCIDADE MÁXIMA: 
-                        // Em vez de pausar sempre, só pausa se o processador ultrapassar 15ms de trabalho contínuo!
-                        currentLengthProcessed += step;
-                        totalPointsCounter++;
-                        
-                        if (totalPointsCounter % 100 === 0) { // Checagem leve de tempo
-                            if (performance.now() - lastYieldTime > 15) {
-                                const percent = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
-                                progressBar.style.width = `${percent}%`;
-                                progressText.textContent = `${percent}%`;
-                                await new Promise(r => setTimeout(r, 0)); // Pausa mínima (0ms)
-                                lastYieldTime = performance.now();
-                            }
+                    for (let l = 0; l <= length; l += baseStep) {
+                        processPt(l);
+                        currentLengthProcessed += baseStep; pointCounter++;
+                        if (pointCounter % 150 === 0 && performance.now() - lastYield > 15) {
+                            let pct = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
+                            els.progBar.style.width = `${pct}%`; els.progText.textContent = `${pct}%`;
+                            await new Promise(r => setTimeout(r, 0)); lastYield = performance.now();
                         }
                     }
+                    if (length % baseStep !== 0) processPt(length);
 
                     if (currentLine.length > 1) {
-                        extractedPaths.push(currentLine);
+                        const pathIdx = basePaths.length;
+                        basePaths.push(currentLine);
+                        rawLayers.push({
+                            id: Date.now() + i, itemId: item.id, pathIndices: [pathIdx],
+                            nome: `${item.name.substring(0,6)} - L${layerCount++}`,
+                            delay: 0, selected: false, visible: true
+                        });
                     }
                 }
 
-                if (extractedPaths.length === 0) throw new Error("Erro ao desenhar pontos.");
+                item.basePaths = basePaths;
+                item.cx = (localMinX + localMaxX) / 2;
+                item.cy = (localMinY + localMaxY) / 2;
 
-                finalPathsData = extractedPaths;
-                originalSvgBounds = { minX, minY, maxX, maxY };
-
-                progressBar.style.width = "98%";
-                statusMsg.textContent = "A gerar Código...";
-                await new Promise(r => setTimeout(r, 10));
-
-                updateScaleAndCode();
-                
-                progressBar.style.width = "100%";
-                progressText.textContent = "100%";
-                statusMsg.textContent = "Mapeado com Sucesso!";
-                
-                document.getElementById('statsDisplay').innerHTML = 
-                    `<span class="text-indigo-600 font-bold">${extractedPaths.length}</span> traços reais identificados com <span class="text-indigo-600 font-bold">${totalPointsCounter}</span> pontos.`;
-
-            } catch (err) {
-                statusMsg.textContent = err.message;
-            } finally {
-                isProcessing = false;
-                setTimeout(() => progressContainer.classList.add('hidden'), 2500);
+            } catch(e) { console.error(e); } 
+            finally {
+                isProcessing = false; els.progContainer.classList.add('hidden');
+                renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
             }
         }
-        
-        function updateScaleAndCode() {
-            if (!finalPathsData || !originalSvgBounds) return;
 
-            const screenW = parseInt(document.getElementById('screenW').value) || 1100;
-            const screenH = parseInt(document.getElementById('screenH').value) || 2442;
-            const percent = parseInt(document.getElementById('drawPercent').value) || 70;
-            const speedMultiplier = parseFloat(document.getElementById('drawSpeed').value) || 2.0;
+        // ==========================================
+        // CONTROLOS DE TRANSFORMAÇÃO LOCAL E GLOBAL
+        // ==========================================
+        function loadItemTransforms() {
+            const inst = projectItems.find(i => i.id === activeItemId);
+            if(!inst) { els.itemTransformPanel.classList.add('opacity-50', 'pointer-events-none'); els.activeItemName.textContent = "Nenhum"; return; }
+            els.itemTransformPanel.classList.remove('opacity-50', 'pointer-events-none'); els.activeItemName.textContent = inst.name;
             
-            // Novos Valores de Posição
-            const pX = parseInt(posXInput.value) || 50;
-            const pY = parseInt(posYInput.value) || 50;
+            // Lidar com o painel de edição de texto
+            if(inst.isText) {
+                els.textEditGroup.classList.remove('hidden');
+                els.editTextInput.value = inst.textContent;
+                els.editTextFont.value = inst.fontUrl;
+            } else {
+                els.textEditGroup.classList.add('hidden');
+            }
+
+            els.itemX.value = inst.x; els.itemY.value = inst.y;
+            els.itemXVal.textContent = inst.x + 'px'; els.itemYVal.textContent = inst.y + 'px';
+            els.itemScaleX.value = inst.scaleX; els.itemScaleY.value = inst.scaleY;
+            els.itemScale.value = inst.scaleX; els.itemScaleVal.textContent = inst.scaleX.toFixed(1) + 'x';
+            els.itemRot.value = inst.rot; els.itemRotVal.textContent = `${inst.rot}°`;
             
-            const origW = originalSvgBounds.maxX - originalSvgBounds.minX;
-            const origH = originalSvgBounds.maxY - originalSvgBounds.minY;
-
-            const targetW = screenW * (percent / 100);
-            const targetH = screenH * (percent / 100);
-            const scale = Math.min(targetW / origW, targetH / origH);
-            
-            // Cálculo inteligente de margens e posição (50% = Dividir a margem sobrave por 2)
-            const offsetX = (screenW - (origW * scale)) * (pX / 100);
-            const offsetY = (screenH - (origH * scale)) * (pY / 100);
-
-            let scaledPaths = finalPathsData.map(path => {
-                return path.map(p => {
-                    let finalX = Math.floor((p.x - originalSvgBounds.minX) * scale + offsetX);
-                    let finalY = Math.floor((p.y - originalSvgBounds.minY) * scale + offsetY);
-                    return [finalX, finalY];
-                });
-            });
-
-            generateCode(scaledPaths, screenW, screenH, speedMultiplier);
-            drawPreview(scaledPaths, screenW, screenH);
+            els.itemFlipX.dataset.active = inst.flipX; els.itemFlipX.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${inst.flipX ? 'bg-indigo-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`;
+            els.itemFlipY.dataset.active = inst.flipY; els.itemFlipY.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${inst.flipY ? 'bg-indigo-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`;
         }
 
-        function generateCode(paths, screenW, screenH, speedMultiplier) {
-            let codeLines = [];
-            codeLines.push(`// --- SCRIPT PERFEITO PARA AUTO.JS ---`);
-            codeLines.push(`// Velocidade: ${speedMultiplier.toFixed(1)}x\n`);
-            
-            codeLines.push(`setScreenMetrics(${screenW}, ${screenH});\n`);
-            
-            codeLines.push(`var MULTIPLICADOR_TEMPO = ${(1 / speedMultiplier).toFixed(3)};\n`);
-            
-            codeLines.push(`function desenharTraco(pontos) {`);
-            codeLines.push(`    var duracaoBase = Math.max(100, pontos.length * 6);`);
-            codeLines.push(`    var duracaoFinal = Math.floor(duracaoBase * MULTIPLICADOR_TEMPO);`);
-            codeLines.push(`    `);
-            codeLines.push(`    var args = [duracaoFinal];`);
-            codeLines.push(`    for (var i = 0; i < pontos.length; i++) {`);
-            codeLines.push(`        args.push(pontos[i]);`);
-            codeLines.push(`    }`);
-            codeLines.push(`    `);
-            codeLines.push(`    gesture.apply(null, args);`);
-            codeLines.push(`    sleep(duracaoFinal + 10);`);
-            codeLines.push(`}\n`);
+        function triggerUpdate() { if (rawLayers.length > 0) updateGeometryAndMap(); }
+        function triggerCodeUpdate() { if (scaledLayers.length > 0) generateCode(); }
 
-            codeLines.push(`var linhas = [`);
-            const pathStrings = paths.map(path => {
-                const ptsStr = path.map(p => `[${p[0]},${p[1]}]`).join(',');
-                return `  [${ptsStr}]`;
-            });
-            codeLines.push(pathStrings.join(',\n'));
-            codeLines.push(`];\n`);
-            
-            codeLines.push(`toast("Iniciando a Mandala...");`);
-            codeLines.push(`for (var i = 0; i < linhas.length; i++) {`);
-            codeLines.push(`    desenharTraco(linhas[i]);`);
-            codeLines.push(`}`);
-            codeLines.push(`toast("Desenho Concluído!");`);
+        const applyLocalTrans = () => {
+            const inst = projectItems.find(i => i.id === activeItemId); if(!inst) return;
+            inst.x = parseFloat(els.itemX.value); inst.y = parseFloat(els.itemY.value);
+            els.itemXVal.textContent = inst.x + 'px'; els.itemYVal.textContent = inst.y + 'px';
+            inst.scaleX = parseFloat(els.itemScaleX.value); inst.scaleY = parseFloat(els.itemScaleY.value);
+            inst.rot = parseFloat(els.itemRot.value); els.itemRotVal.textContent = `${inst.rot}°`;
+            triggerUpdate();
+        };
 
-            const finalCode = codeLines.join('\n');
-            document.getElementById('outputCode').value = finalCode;
-            
-            const btn = document.getElementById('copyBtn');
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            btn.onclick = () => {
-                document.getElementById('outputCode').select();
-                document.execCommand('copy');
-                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Copiado!`;
-                btn.classList.add('bg-emerald-100', 'text-emerald-700');
-                setTimeout(() => {
-                    btn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> Copiar`;
-                    btn.classList.remove('bg-emerald-100', 'text-emerald-700');
-                }, 2000);
-            };
-        }
+        els.itemScale.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            els.itemScaleVal.textContent = val.toFixed(1) + 'x';
+            els.itemScaleX.value = val; els.itemScaleY.value = val;
+            applyLocalTrans();
+        });
 
-        function drawPreview(paths, screenW, screenH) {
-            document.getElementById('noPreviewMsg').style.display = 'none';
-            
-            const containerBox = canvas.parentElement.getBoundingClientRect();
-            const previewScale = Math.min((containerBox.width - 40) / screenW, (containerBox.height - 40) / screenH);
-            
-            canvas.width = screenW * previewScale;
-            canvas.height = screenH * previewScale;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        els.itemX.addEventListener('input', applyLocalTrans); els.itemY.addEventListener('input', applyLocalTrans);
+        els.itemScaleX.addEventListener('input', applyLocalTrans); els.itemScaleY.addEventListener('input', applyLocalTrans);
+        els.itemRot.addEventListener('input', applyLocalTrans);
+        els.itemFlipX.onclick = () => { const inst = projectItems.find(i => i.id === activeItemId); if(inst) { inst.flipX = !inst.flipX; loadItemTransforms(); triggerUpdate(); }};
+        els.itemFlipY.onclick = () => { const inst = projectItems.find(i => i.id === activeItemId); if(inst) { inst.flipY = !inst.flipY; loadItemTransforms(); triggerUpdate(); }};
 
-            ctx.fillStyle = "#1e293b";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "rgba(255,255,255,0.1)";
-            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        const handleGlobalUpdate = () => { els.percentValue.textContent = `${els.drawPercent.value}%`; els.marginValue.textContent = `${els.drawMargin.value}px`; triggerUpdate(); };
+        els.drawPercent.addEventListener('input', handleGlobalUpdate); els.drawMargin.addEventListener('input', handleGlobalUpdate);
+        els.screenW.addEventListener('change', triggerUpdate); els.screenH.addEventListener('change', triggerUpdate);
+        els.stepPrecision.addEventListener('input', (e) => { els.precisionValue.textContent = `${e.target.value}px`; });
+        els.stepPrecision.addEventListener('change', triggerUpdate);
+        els.continuousLine.addEventListener('change', triggerUpdate);
 
-            paths.forEach((path, index) => {
-                ctx.beginPath();
-                ctx.strokeStyle = index % 2 === 0 ? "#10b981" : "#a855f7"; 
-                ctx.lineWidth = 1.0;
+        els.drawSpeed.addEventListener('input', (e) => { els.speedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`; triggerCodeUpdate(); });
+        els.drawPause.addEventListener('input', (e) => { els.pauseValue.textContent = `${e.target.value}ms`; triggerCodeUpdate(); });
+        els.turboMode.addEventListener('change', triggerCodeUpdate);
+        els.warmupMode.addEventListener('change', triggerCodeUpdate);
+        els.posXInput.addEventListener('input', (e) => { els.posXVal.textContent = `${e.target.value}%`; triggerUpdate(); });
+        els.posYInput.addEventListener('input', (e) => { els.posYVal.textContent = `${e.target.value}%`; triggerUpdate(); });
+
+        els.resetGeoBtn.onclick = () => {
+            els.itemScaleX.value = 1.0; els.itemScaleY.value = 1.0; els.itemScale.value = 1.0; els.itemScaleVal.textContent = "1.0x";
+            els.itemRot.value = 0; els.itemRotVal.textContent = "0°"; els.itemX.value = 0; els.itemY.value = 0;
+            els.itemXVal.textContent = "0px"; els.itemYVal.textContent = "0px";
+            
+            const inst = projectItems.find(i => i.id === activeItemId);
+            if(inst) { inst.flipX = false; inst.flipY = false; inst.x = 0; inst.y = 0; inst.scaleX = 1; inst.scaleY = 1; inst.rot = 0; }
+            loadItemTransforms(); triggerUpdate();
+        };
+
+        // ZOOM PAN
+        function resetZoom() { viewScale = 1.0; viewOffsetX = 0; viewOffsetY = 0; if(scaledLayers.length) drawStaticPreview(); }
+        document.getElementById('zoomInBtn').onclick = () => { viewScale *= 1.3; drawStaticPreview(); };
+        document.getElementById('zoomOutBtn').onclick = () => { viewScale /= 1.3; drawStaticPreview(); };
+        document.getElementById('zoomResetBtn').onclick = resetZoom;
+        els.canvas.addEventListener('wheel', (e) => { e.preventDefault(); viewScale *= (e.deltaY < 0) ? 1.1 : 0.9; drawStaticPreview(); }, { passive: false });
+        const getPos = (e) => (e.touches && e.touches.length > 0) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+        els.canvas.addEventListener('mousedown', startPan); els.canvas.addEventListener('touchstart', startPan, { passive: false });
+        function startPan(e) { if(!scaledLayers.length || isAnimating) return; isDraggingCanvas = true; const p = getPos(e); dragStartX = p.x - viewOffsetX; dragStartY = p.y - viewOffsetY; els.canvas.classList.replace('cursor-grab', 'cursor-grabbing'); }
+        els.canvas.addEventListener('mousemove', movePan); els.canvas.addEventListener('touchmove', movePan, { passive: false });
+        function movePan(e) { if (!isDraggingCanvas) return; e.preventDefault(); const p = getPos(e); viewOffsetX = p.x - dragStartX; viewOffsetY = p.y - dragStartY; drawStaticPreview(); }
+        const endPan = () => { isDraggingCanvas = false; els.canvas.classList.replace('cursor-grabbing', 'cursor-grab'); };
+        els.canvas.addEventListener('mouseup', endPan); els.canvas.addEventListener('mouseleave', endPan); els.canvas.addEventListener('touchend', endPan);
+        window.addEventListener('resize', () => { if(scaledLayers.length && !isAnimating) drawStaticPreview(); });
+
+        // ==========================================
+        // GESTOR DE CAMADAS UI
+        // ==========================================
+        function renderLayersUI() {
+            els.layersList.innerHTML = '';
+            if(rawLayers.length === 0) { els.layersList.innerHTML = `<div class="text-center text-xs text-gray-500 mt-8">Sem dados geográficos.</div>`; return; }
+            rawLayers.forEach((layer, index) => {
+                const el = document.createElement('div');
+                let baseClass = `flex items-center grid grid-cols-12 gap-1 p-1 rounded border transition-colors ${layer.selected ? 'bg-indigo-500/20 border-indigo-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`;
+                if (!layer.visible) baseClass += ` opacity-40`;
+                el.className = baseClass;
                 
-                path.forEach((p, i) => {
-                    let scaledX = p[0] * previewScale;
-                    let scaledY = p[1] * previewScale;
-                    if (i === 0) ctx.moveTo(scaledX, scaledY);
-                    else ctx.lineTo(scaledX, scaledY);
+                const divSel = document.createElement('div'); divSel.className = 'col-span-1 flex justify-center';
+                const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'w-3 h-3 accent-indigo-500 cursor-pointer'; chk.checked = layer.selected;
+                chk.onchange = () => { layer.selected = chk.checked; els.mergeBtn.disabled = rawLayers.filter(l=>l.selected).length < 2; renderLayersUI(); drawStaticPreview(); };
+                divSel.appendChild(chk);
+                
+                const divVis = document.createElement('div'); divVis.className = 'col-span-1 flex justify-center cursor-pointer text-gray-400 hover:text-white';
+                divVis.innerHTML = layer.visible ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i>' : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>';
+                divVis.onclick = () => { layer.visible = !layer.visible; renderLayersUI(); triggerUpdate(); };
+                
+                const divNome = document.createElement('div'); divNome.className = 'col-span-5 flex items-center';
+                const inpNome = document.createElement('input'); inpNome.type = 'text'; inpNome.className = 'w-full bg-transparent border-none outline-none px-1 text-gray-200 text-[10px]'; inpNome.value = layer.nome;
+                inpNome.onchange = (e) => { layer.nome = e.target.value; generateCode(); }; 
+                divNome.appendChild(inpNome);
+
+                const divDelay = document.createElement('div'); divDelay.className = 'col-span-3 flex justify-center items-center';
+                const inpDelay = document.createElement('input'); inpDelay.type = 'number'; inpDelay.min = 0; inpDelay.step = 0.5; inpDelay.className = 'w-8 bg-slate-900 border border-slate-600 rounded p-0.5 text-center outline-none text-white text-[10px]'; inpDelay.value = layer.delay;
+                inpDelay.onchange = (e) => { layer.delay = parseFloat(e.target.value) || 0; generateCode(); };
+                divDelay.appendChild(inpDelay);
+
+                const divOrder = document.createElement('div'); divOrder.className = 'col-span-2 flex justify-center gap-1';
+                const btnUp = document.createElement('button'); btnUp.innerHTML = '<i data-lucide="chevron-up" class="w-3 h-3"></i>'; btnUp.className = 'text-gray-500 hover:text-white disabled:opacity-30'; btnUp.disabled = index === 0; btnUp.onclick = () => moveLayer(index, -1);
+                const btnDown = document.createElement('button'); btnDown.innerHTML = '<i data-lucide="chevron-down" class="w-3 h-3"></i>'; btnDown.className = 'text-gray-500 hover:text-white disabled:opacity-30'; btnDown.disabled = index === rawLayers.length - 1; btnDown.onclick = () => moveLayer(index, 1);
+                divOrder.appendChild(btnUp); divOrder.appendChild(btnDown);
+
+                el.appendChild(divSel); el.appendChild(divVis); el.appendChild(divNome); el.appendChild(divDelay); el.appendChild(divOrder);
+                els.layersList.appendChild(el);
+            });
+            lucide.createIcons();
+            els.mergeBtn.disabled = rawLayers.filter(l => l.selected).length < 2;
+        }
+
+        function moveLayer(index, dir) { const t = rawLayers[index]; rawLayers[index] = rawLayers[index+dir]; rawLayers[index+dir] = t; renderLayersUI(); triggerUpdate(); }
+
+        els.mergeBtn.onclick = () => {
+            const sels = rawLayers.filter(l => l.selected); if(sels.length < 2) return;
+            const unsel = rawLayers.filter(l => !l.selected);
+            let mergedIndices = []; sels.forEach(l => mergedIndices.push(...l.pathIndices));
+            const newLayer = { id: Date.now(), itemId: sels[0].itemId, pathIndices: mergedIndices, nome: `Mescla_${unsel.length+1}`, delay: 0, selected: false, visible: true };
+            rawLayers = [newLayer, ...unsel]; renderLayersUI(); triggerUpdate();
+        };
+
+        // ==========================================
+        // MOTOR MATEMÁTICO: JS TRANSFORMS -> ECRÃ
+        // ==========================================
+        function updateGeometryAndMap() {
+            if(projectItems.length === 0) { scaledLayers = []; globalScaledTraces = []; drawStaticPreview(); generateCode(); return; }
+            stopAnimation();
+
+            let gMinX = Infinity, gMinY = Infinity, gMaxX = -Infinity, gMaxY = -Infinity;
+
+            projectItems.forEach(item => {
+                item.basePaths.forEach(tr => {
+                    tr.forEach(p => {
+                        if(p.x < gMinX) gMinX = p.x; if(p.x > gMaxX) gMaxX = p.x;
+                        if(p.y < gMinY) gMinY = p.y; if(p.y > gMaxY) gMaxY = p.y;
+                    });
                 });
+            });
+
+            const screenW = parseInt(els.screenW.value) || 1100;
+            const screenH = parseInt(els.screenH.value) || 2442;
+            const percent = parseInt(els.drawPercent.value) || 70;
+            const margin = parseInt(els.drawMargin.value) || 20;
+            const pX = parseInt(els.posXInput.value) || 0; 
+            const pY = parseInt(els.posYInput.value) || 0;
+
+            const availW = (screenW * (percent/100)) - (margin * 2);
+            const availH = (screenH * (percent/100)) - (margin * 2);
+            
+            let tW = gMaxX - gMinX; let tH = gMaxY - gMinY;
+            if(tW <= 0) tW = 1; if(tH <= 0) tH = 1;
+            const finalScale = Math.min(availW / tW, availH / tH) || 1;
+
+            const baseOffsetX = ((screenW - (tW * finalScale)) / 2) + (screenW * (pX / 100));
+            const baseOffsetY = ((screenH - (tH * finalScale)) / 2) + (screenH * (pY / 100));
+
+            scaledLayers = [];
+            globalScaledTraces = [];
+            let ptsFinais = 0; let visCamadas = 0;
+            const userStep = parseInt(els.stepPrecision.value) || 3;
+            const isCont = els.continuousLine.checked;
+
+            rawLayers.forEach(layer => {
+                const item = projectItems.find(i => i.id === layer.itemId);
+                if(!item) return;
+
+                const cx = item.cx; const cy = item.cy;
+                const rad = item.rot * Math.PI / 180; const cos = Math.cos(rad); const sin = Math.sin(rad);
+
+                let tracesScreen = [];
+                let currentContinuous = [];
+
+                layer.pathIndices.forEach(pIdx => {
+                    const tr = item.basePaths[pIdx];
+                    if(!tr) return;
+
+                    let cleanPath = []; let lastPt = null;
+                    tr.forEach(p => {
+                        let px = p.x - cx; let py = p.y - cy;
+                        if(item.flipX) px = -px; if(item.flipY) py = -py;
+                        px *= item.scaleX; py *= item.scaleY;
+                        let rx = px * cos - py * sin; let ry = px * sin + py * cos;
+                        let fx = rx + cx; let fy = ry + cy;
+                        
+                        let sx = Math.floor((fx - gMinX) * finalScale + baseOffsetX + item.x);
+                        let sy = Math.floor((fy - gMinY) * finalScale + baseOffsetY + item.y);
+                        
+                        if(!lastPt) { cleanPath.push({x: sx, y: sy}); lastPt = {x: sx, y: sy}; }
+                        else {
+                            let dx = sx - lastPt.x; let dy = sy - lastPt.y;
+                            if((dx*dx + dy*dy) >= (userStep*userStep)) { cleanPath.push({x: sx, y: sy}); lastPt = {x: sx, y: sy}; }
+                        }
+                    });
+                    
+                    if(tr.length > 1) {
+                        let p = tr[tr.length-1];
+                        let px = p.x - cx; let py = p.y - cy;
+                        if(item.flipX) px = -px; if(item.flipY) py = -py;
+                        px *= item.scaleX; py *= item.scaleY;
+                        let rx = px * cos - py * sin; let ry = px * sin + py * cos;
+                        let fx = rx + cx; let fy = ry + cy;
+                        let sx = Math.floor((fx - gMinX) * finalScale + baseOffsetX + item.x);
+                        let sy = Math.floor((fy - gMinY) * finalScale + baseOffsetY + item.y);
+                        cleanPath.push({x: sx, y: sy});
+                    }
+
+                    if (cleanPath.length > 1) {
+                        if(isCont) currentContinuous.push(...cleanPath);
+                        else { tracesScreen.push(cleanPath); if(layer.visible) { ptsFinais += cleanPath.length; globalScaledTraces.push(cleanPath); } }
+                    }
+                });
+
+                if(isCont && currentContinuous.length > 1) {
+                    tracesScreen.push(currentContinuous);
+                    if(layer.visible) { ptsFinais += currentContinuous.length; globalScaledTraces.push(currentContinuous); }
+                }
+
+                if(layer.visible) visCamadas++;
+
+                scaledLayers.push({
+                    nome: layer.nome, delay: layer.delay, visible: layer.visible, selected: layer.selected,
+                    screenTraces: tracesScreen
+                });
+            });
+
+            els.statsDisplay.innerHTML = `Camadas Ativas: <b class="text-emerald-400">${visCamadas}/${rawLayers.length}</b> | Pontos Mapeados: <b class="text-emerald-400">${ptsFinais}</b>`;
+            drawStaticPreview(); generateCode();
+        }
+
+        // ==========================================
+        // PREVIEW E ANIMAÇÃO
+        // ==========================================
+        function getLayerColor(index, total) { return total <= 1 ? `hsl(280, 80%, 60%)` : `hsl(280, 80%, ${80 - ((index / (total - 1)) * 50)}%)`; }
+
+        function drawStaticPreview() {
+            if (!scaledLayers.length) return;
+            const noPreviewMsg = document.getElementById('noPreviewMsg');
+            if(noPreviewMsg) noPreviewMsg.style.display = 'none';
+            els.canvas.width = els.canvasWrapper.clientWidth; els.canvas.height = els.canvasWrapper.clientHeight;
+            const sw = parseInt(els.screenW.value)||1100; const sh = parseInt(els.screenH.value)||2442;
+            const bScale = Math.min((els.canvas.width-40)/sw, (els.canvas.height-40)/sh);
+            
+            ctx.save(); ctx.translate(viewOffsetX, viewOffsetY); ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
+            const cx = (els.canvas.width - sw*bScale)/2; const cy = (els.canvas.height - sh*bScale)/2;
+            
+            ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.strokeRect(cx, cy, sw*bScale, sh*bScale);
+            const anySel = scaledLayers.some(l => l.selected);
+
+            scaledLayers.forEach((layer, idx) => {
+                if (!layer.visible) return; 
+                ctx.beginPath(); 
+                if (anySel) { ctx.strokeStyle = getLayerColor(idx, scaledLayers.length); ctx.lineWidth = layer.selected ? Math.max(1, 2/viewScale) : Math.max(0.5, 1/viewScale); ctx.globalAlpha = layer.selected ? 1 : 0.1; } 
+                else { ctx.strokeStyle = getLayerColor(idx, scaledLayers.length); ctx.lineWidth = Math.max(0.5, 1.5/viewScale); ctx.globalAlpha = 1; }
+
+                layer.screenTraces.forEach(tr => { tr.forEach((p, i) => { if (i === 0) ctx.moveTo(cx+p.x*bScale, cy+p.y*bScale); else ctx.lineTo(cx+p.x*bScale, cy+p.y*bScale); }); });
                 ctx.stroke();
             });
+            ctx.globalAlpha = 1; ctx.restore();
         }
+
+        els.exportGifBtn.onclick = startGifRecording;
+
+        async function startGifRecording() {
+            if (!globalScaledTraces.length) return;
+            
+            isRecordingGif = true;
+            els.exportGifBtn.disabled = true;
+            els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5 animate-pulse"></i> A gravar...';
+            lucide.createIcons();
+            
+            try {
+                const workerBlob = new Blob([`importScripts('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');`], {type: 'application/javascript'});
+                const workerUrl = URL.createObjectURL(workerBlob);
+                
+                gifEncoder = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    workerScript: workerUrl,
+                    width: els.canvas.width,
+                    height: els.canvas.height,
+                    background: '#020617'
+                });
+                
+                gifEncoder.on('finished', function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = (els.jsFileName.value.trim() || 'animacao') + '.gif';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    isRecordingGif = false;
+                    gifEncoder = null;
+                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                    els.exportGifBtn.disabled = false;
+                    lucide.createIcons();
+                });
+                
+                startAnimation();
+            } catch(e) {
+                console.error("Erro ao iniciar GIF", e);
+                isRecordingGif = false;
+                els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                els.exportGifBtn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        els.playBtn.onclick = () => startAnimation();
+
+        async function startAnimation() {
+            if (!globalScaledTraces.length) return;
+            stopAnimation(false); 
+            isAnimating = true;
+            els.playBtn.classList.add('hidden'); els.stopBtn.classList.remove('hidden'); els.canvas.style.pointerEvents = 'none';
+
+            els.canvas.width = els.canvasWrapper.clientWidth; els.canvas.height = els.canvasWrapper.clientHeight;
+            const sw = parseInt(els.screenW.value)||1100; const sh = parseInt(els.screenH.value)||2442;
+            const bScale = Math.min((els.canvas.width - 40) / sw, (els.canvas.height - 40) / sh);
+            const sOffsetX = (els.canvas.width - (sw * bScale)) / 2; const sOffsetY = (els.canvas.height - (sh * bScale)) / 2;
+
+            const clearCanvas = () => {
+                ctx.fillStyle = "#020617";
+                ctx.fillRect(0,0,els.canvas.width, els.canvas.height);
+                
+                ctx.save();
+                ctx.strokeStyle = "rgba(255,255,255,0.03)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for(let x=0.5; x<els.canvas.width; x+=20) { ctx.moveTo(x,0); ctx.lineTo(x,els.canvas.height); }
+                for(let y=0.5; y<els.canvas.height; y+=20) { ctx.moveTo(0,y); ctx.lineTo(els.canvas.width,y); }
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.save(); ctx.translate(viewOffsetX, viewOffsetY);
+                ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
+                ctx.fillStyle = "#1e293b"; ctx.fillRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
+                ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
+            };
+
+            clearCanvas();
+            
+            let cL=0, cT=0, cP=0, cBuf=[], fPaths=[], isDelay=false, delEnd=0;
+            const anySel = scaledLayers.some(l => l.selected);
+
+            const loop = (t) => {
+                if(!isAnimating) return;
+                
+                if (isRecordingGif) {
+                    if (!lastGifFrameTime || t - lastGifFrameTime >= 40) { 
+                        gifEncoder.addFrame(els.canvas, {copy: true, delay: 40});
+                        lastGifFrameTime = t;
+                    }
+                }
+
+                if(isDelay) { if(t < delEnd) { animReqId = requestAnimationFrame(loop); return; } isDelay = false; }
+                let pts = Math.max(1, Math.floor((parseFloat(els.drawSpeed.value)||2)*2));
+
+                while(pts>0 && isAnimating && !isDelay) {
+                    if(cL >= scaledLayers.length) { stopAnimation(true); return; }
+                    const l = scaledLayers[cL];
+                    if(!l.visible) { cL++; cT=0; cP=0; continue; }
+                    const tr = l.screenTraces[cT];
+                    if(cT===0 && cP===0 && l.delay>0) { isDelay=true; delEnd=t+(l.delay*1000); ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.roundRect((els.canvas.width/2)-100,20,200,30,8); ctx.fill(); ctx.fillStyle='#fff'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText(`Delay: ${l.nome}`, els.canvas.width/2,40); ctx.restore(); animReqId=requestAnimationFrame(loop); return; }
+
+                    if(cP < tr.length) { cBuf.push(tr[cP]); cP++; pts--; } 
+                    else { fPaths.push({ c: getLayerColor(cL, scaledLayers.length), p: [...cBuf], s: l.selected }); cBuf=[]; cT++; cP=0; if(cT >= l.screenTraces.length) { cL++; cT=0; } }
+                }
+
+                clearCanvas();
+                fPaths.forEach(fp => { ctx.beginPath(); ctx.strokeStyle=fp.c; if(anySel){ ctx.lineWidth=fp.s?Math.max(1,2/viewScale):Math.max(0.5,1/viewScale); ctx.globalAlpha=fp.s?1:0.1;} else {ctx.lineWidth=Math.max(0.5,1.5/viewScale); ctx.globalAlpha=1;} fp.p.forEach((p,i)=>{ if(i===0)ctx.moveTo(sOffsetX+p.x*bScale,sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale,sOffsetY+p.y*bScale); }); ctx.stroke(); });
+                if(cBuf.length>0) { const l = scaledLayers[cL]; ctx.beginPath(); ctx.strokeStyle=getLayerColor(cL, scaledLayers.length); if(anySel){ctx.lineWidth=l.selected?Math.max(1,2/viewScale):Math.max(0.5,1/viewScale); ctx.globalAlpha=l.selected?1:0.1;} else {ctx.lineWidth=Math.max(0.5,1.5/viewScale); ctx.globalAlpha=1;} ctx.shadowColor='#fff'; ctx.shadowBlur=5; cBuf.forEach((p,i)=>{ if(i===0)ctx.moveTo(sOffsetX+p.x*bScale,sOffsetY+p.y*bScale); else ctx.lineTo(sOffsetX+p.x*bScale,sOffsetY+p.y*bScale); }); ctx.stroke(); ctx.shadowBlur=0; }
+                ctx.globalAlpha=1; ctx.restore();
+                if(isAnimating) animReqId = requestAnimationFrame(loop);
+            };
+            animReqId = requestAnimationFrame(loop);
+        }
+
+        function stopAnimation(isComplete = false) { 
+            isAnimating=false; 
+            if(animReqId) cancelAnimationFrame(animReqId); 
+            els.playBtn.classList.remove('hidden'); 
+            els.stopBtn.classList.add('hidden'); 
+            els.canvas.style.pointerEvents='auto'; 
+            
+            if (isRecordingGif) {
+                if (isComplete && gifEncoder) {
+                    els.exportGifBtn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Processando...';
+                    lucide.createIcons();
+                    gifEncoder.addFrame(els.canvas, {copy: true, delay: 2000}); 
+                    gifEncoder.render();
+                } else {
+                    isRecordingGif = false;
+                    gifEncoder = null;
+                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                    els.exportGifBtn.disabled = false;
+                    lucide.createIcons();
+                }
+            }
+
+            drawStaticPreview(); 
+        }
+
+        // ==========================================
+        // GERAÇÃO DE SCRIPT
+        // ==========================================
+        function generateCode() {
+            if (!scaledLayers.length) { els.outputCode.value = "// Sem dados."; return; }
+            const sw = parseInt(els.screenW.value) || 1100; const sh = parseInt(els.screenH.value) || 2442;
+            const mult = 1 / (parseFloat(els.drawSpeed.value) || 2.0);
+            const pause = parseInt(els.drawPause.value) || 35;
+            const turbo = els.turboMode.checked;
+            const warmup = els.warmupMode.checked;
+            const visL = scaledLayers.filter(l => l.visible);
+
+            let c = []; 
+            c.push(`// --- AUTO.JS VECTOR STUDIO ---`);
+            c.push(`// Engine de Múltiplos Arquivos | Modo: ${turbo ? 'Turbo' : 'Precisão'}`);
+            c.push(`// Continuidade de Traço Ativa: Sem quebras em segmentos!\n`);
+            
+            if(!visL.length) { els.outputCode.value = "// Nenhuma camada visível selecionada."; return; }
+
+            c.push(`setScreenMetrics(${sw}, ${sh});\n`);
+            c.push(`var MULTIPLICADOR = ${mult.toFixed(3)};\n`);
+            
+            c.push(`function desenharWarmup(pts) {`);
+            c.push(`    if(pts.length < 2) return;`);
+            c.push(`    var dur = Math.max(300, pts.length * 15);`);
+            c.push(`    gesture.apply(null, [dur].concat(pts));`);
+            c.push(`    sleep(200);`);
+            c.push(`}\n`);
+
+            c.push(`function desenharTraco(pts) {`);
+            c.push(`    if(pts.length < 2) return;`);
+            if(turbo) {
+                c.push(`    var dur = Math.floor((pts.length * 6) * MULTIPLICADOR);`);
+                c.push(`    if(dur < Math.max(40, pts.length * 4)) dur = Math.max(40, pts.length * 4);`);
+                c.push(`    if(dur > 60000) dur = 60000;`);
+                c.push(`    gesture.apply(null, [dur].concat(pts)); sleep(5);`);
+            } else {
+                c.push(`    var dur = Math.floor(Math.max(100, pts.length * 10) * MULTIPLICADOR);`);
+                c.push(`    if(dur < Math.max(80, pts.length * 5)) dur = Math.max(80, pts.length * 5);`);
+                c.push(`    if(dur > 60000) dur = 60000;`);
+                c.push(`    gesture.apply(null, [dur].concat(pts)); sleep(${pause});`);
+            }
+            c.push(`}\n`);
+
+            c.push(`var cam = [`);
+            if (warmup && visL.length > 0 && visL[0].screenTraces.length > 0) {
+                const tr = visL[0].screenTraces[0];
+                const tAq = Math.max(3, Math.min(15, Math.floor(tr.length * 0.25)));
+                c.push(`  { nome: "Pré-Traço Inicial (Anti-Bug)", isWarmup: true, del: 0, trs: [ [${tr.slice(0, tAq).map(p=>`[${p.x},${p.y}]`).join(',')}] ] },`); 
+            }
+            
+            visL.forEach((l, idx) => {
+                c.push(`  { nome: "${l.nome}", del: ${l.delay * 1000}, trs: [`);
+                c.push(l.screenTraces.map(tr => `    [${tr.map(p=>`[${p.x},${p.y}]`).join(',')}]`).join(',\n'));
+                c.push(`  ] }${idx < visL.length - 1 ? ',' : ''}`);
+            });
+            c.push(`];\n`);
+
+            c.push(`// --- EXECUÇÃO PRINCIPAL ---`);
+            c.push(`for (var k = 0; k < cam.length; k++) {`);
+            c.push(`    var cmd = cam[k];`);
+            c.push(`    if (cmd.isWarmup) {`);
+            c.push(`        toast("Executando Pré-Traço...");`);
+            c.push(`        for (var t = 0; t < cmd.trs.length; t++) { desenharWarmup(cmd.trs[t]); }`);
+            c.push(`        continue;`);
+            c.push(`    }`);
+            c.push(`    if (cmd.del > 0) { toast("Espere " + (cmd.del/1000) + "s: " + cmd.nome); sleep(cmd.del); }`);
+            c.push(`    else { toast("A desenhar: " + cmd.nome); }`);
+            c.push(`    for (var t = 0; t < cmd.trs.length; t++) { desenharTraco(cmd.trs[t]); sleep(${pause}); }`);
+            c.push(`}`);
+            c.push(`toast("Composição Finalizada!");`);
+
+            els.outputCode.value = c.join('\n');
+        }
+
+        document.getElementById('copyBtn').onclick = () => { els.outputCode.select(); document.execCommand('copy'); };
+        document.getElementById('saveBtn').onclick = () => {
+            let name = els.jsFileName.value.trim() || 'composicao'; if (!name.endsWith('.js')) name += '.js';
+            const blob = new Blob([els.outputCode.value], { type: 'text/javascript' }); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+        };
     </script>
 </body>
 </html>
