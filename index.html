@@ -908,7 +908,7 @@
         // ==========================================
         function updateGeometryAndMap() {
             if(projectItems.length === 0) { scaledLayers = []; globalScaledTraces = []; drawStaticPreview(); generateCode(); updateStats(); return; }
-            stopAnimation();
+            stopAnimation(false); // Apenas interrompe a animação sem afetar o GIF ainda.
 
             const screenW = parseInt(els.screenW.value) || 1100;
             const screenH = parseInt(els.screenH.value) || 2442;
@@ -974,20 +974,16 @@
 
                     if (cleanPath.length > 1) {
                         if (isCont) {
-                            // JUNÇÃO SEGURA "TRAÇO CONTÍNUO":
-                            // Se a linha anterior terminar EXATAMENTE próxima do início da linha atual, ele cola-as.
-                            // Se a distância física for um pulo grande (ex: olho esquerdo pro olho direito), ele quebra, respeitando a arte!
                             if (currentContinuous.length > 0) {
                                 let lastP = currentContinuous[currentContinuous.length - 1];
                                 let firstP = cleanPath[0];
                                 let gapSq = (lastP.x - firstP.x) ** 2 + (lastP.y - firstP.y) ** 2;
                                 
-                                if (gapSq > 600) { // Gap maior que ~25 pixels no ecrã real. Fecha o traço atual!
+                                if (gapSq > 600) { 
                                     tracesScreen.push(currentContinuous);
                                     if(layer.visible) globalScaledTraces.push(currentContinuous);
-                                    currentContinuous = [...cleanPath]; // Começa um novo a partir daqui
+                                    currentContinuous = [...cleanPath]; 
                                 } else {
-                                    // Gap minúsculo, podemos encadear o traço como se fosse contínuo
                                     currentContinuous.push(...cleanPath);
                                 }
                             } else {
@@ -995,7 +991,6 @@
                             }
                         } 
                         else { 
-                            // Respeito Máximo da Forma
                             tracesScreen.push(cleanPath); 
                             if(layer.visible) globalScaledTraces.push(cleanPath); 
                         }
@@ -1052,6 +1047,9 @@
         async function startGifRecording() {
             if (!globalScaledTraces.length) return;
             
+            // Interromper absolutamente qualquer simulação em curso antes de preparar o gravador
+            stopAnimation(false);
+            
             isRecordingGif = true;
             els.exportGifBtn.disabled = true;
             els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5 animate-pulse"></i> A gravar...';
@@ -1080,26 +1078,30 @@
                     
                     isRecordingGif = false;
                     gifEncoder = null;
-                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                     els.exportGifBtn.disabled = false;
                     lucide.createIcons();
                 });
                 
-                startAnimation();
+                // Iniciar a animação mantendo o estado de gravação intacto
+                startAnimation(true);
             } catch(e) {
                 console.error("Erro ao iniciar GIF", e);
                 isRecordingGif = false;
-                els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                 els.exportGifBtn.disabled = false;
                 lucide.createIcons();
             }
         }
 
-        els.playBtn.onclick = () => startAnimation();
+        els.playBtn.onclick = () => {
+            stopAnimation(false);
+            startAnimation(false);
+        };
 
-        async function startAnimation() {
+        async function startAnimation(keepRecordingState = false) {
             if (!globalScaledTraces.length) return;
-            stopAnimation(false); 
+            
             isAnimating = true;
             els.playBtn.classList.add('hidden'); els.stopBtn.classList.remove('hidden'); els.canvas.style.pointerEvents = 'none';
 
@@ -1164,6 +1166,8 @@
             };
             animReqId = requestAnimationFrame(loop);
         }
+
+        els.stopBtn.onclick = () => stopAnimation(false);
 
         function stopAnimation(isComplete = false) { 
             isAnimating=false; 
