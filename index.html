@@ -1027,15 +1027,13 @@
             const screenH = parseInt(els.screenH.value) || 2442;
             const percent = parseInt(els.drawPercent.value) || 70;
             const margin = parseInt(els.drawMargin.value) || 20;
-            const pX = parseInt(els.posXInput.value) || 0; 
-            const pY = parseInt(els.posYInput.value) || 0;
 
             const availW = (screenW * (percent/100)) - (margin * 2);
             const availH = (screenH * (percent/100)) - (margin * 2);
             const finalScale = Math.min(availW / 1000, availH / 1000) || 1;
 
-            const screenCX = (screenW / 2) + (screenW * (pX / 100));
-            const screenCY = (screenH / 2) + (screenH * (pY / 100));
+            const screenCX = screenW / 2;
+            const screenCY = screenH / 2;
 
             // Variáveis Globais
             const gPosX = parseFloat(els.globalX.value) || 0;
@@ -1106,6 +1104,17 @@
                         let sx = Math.floor(screenCX + grx * finalScale + gPosX);
                         let sy = Math.floor(screenCY + gry * finalScale + gPosY);
                         cleanPath.push({x: sx, y: sy});
+                    }
+
+                    // NOVO: FORÇAR FECHAMENTO PERFEITO DE FORMAS CIRCULARES E FECHADAS
+                    if (cleanPath.length > 2) {
+                        let firstPoint = cleanPath[0];
+                        let lastPoint = cleanPath[cleanPath.length - 1];
+                        let gap = (firstPoint.x - lastPoint.x) ** 2 + (firstPoint.y - lastPoint.y) ** 2;
+                        // Se o início e o fim estiverem muito próximos (ex: um círculo), encosta a última ponta ao início exato!
+                        if (gap > 0 && gap <= 400) { // Tolerância de ~20px no ecrã
+                            cleanPath.push({x: firstPoint.x, y: firstPoint.y});
+                        }
                     }
 
                     if (cleanPath.length > 1) {
