@@ -129,11 +129,11 @@
                     </div>
                 </div>
 
-                <!-- Transformação Individual -->
+                <!-- Transformação Individual (LOCAL) -->
                 <div id="itemTransformPanel" class="panel p-4 rounded-xl shadow-lg border space-y-4 opacity-50 pointer-events-none transition-opacity">
                     <h2 class="text-sm font-bold text-gray-200 border-b border-slate-600 pb-2 flex justify-between items-center">
                         <span class="flex items-center gap-2">
-                            Transformação
+                            Transformação Local
                             <button id="resetGeoBtn" class="text-indigo-400 hover:text-indigo-300" title="Resetar Transformações"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                         </span>
                         <span id="activeItemName" class="text-[9px] font-mono text-indigo-300 truncate max-w-[100px]">Nenhum</span>
@@ -172,17 +172,40 @@
                     </div>
                 </div>
 
-                <!-- Configurações Globais -->
+                <!-- Configurações Globais (NOVO PAINEL COMPLETO) -->
                 <div class="panel p-4 rounded-xl shadow-lg border space-y-3 text-xs text-gray-400">
-                    <h2 class="text-sm font-bold text-gray-200 border-b border-slate-600 pb-2">Ambiente & Robô</h2>
-                    <div class="grid grid-cols-2 gap-2">
+                    <h2 class="text-sm font-bold text-gray-200 border-b border-slate-600 pb-2 flex justify-between items-center">
+                        <span class="flex items-center gap-2">Ambiente & Robô (Global)</span>
+                        <button id="resetGlobalGeoBtn" class="text-emerald-400 hover:text-emerald-300" title="Resetar Transformações Globais"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
+                    </h2>
+                    
+                    <!-- Novas Transformações Globais -->
+                    <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-700">
+                        <div><label class="flex justify-between mb-1"><span>Pos X (Global)</span><span id="globalXVal" class="text-emerald-300">0</span></label><input type="range" id="globalX" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="text-emerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        
+                        <div class="col-span-2">
+                            <label class="flex justify-between mb-1"><span class="font-bold text-emerald-400">Escala Geral Global</span><span id="globalScaleVal" class="text-emerald-400 font-bold">1.0x</span></label>
+                            <input type="range" id="globalScale" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500">
+                        </div>
+                        <div><label class="block mb-1">Escala X Global</label><input type="range" id="globalScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500"></div>
+                        <div><label class="block mb-1">Escala Y Global</label><input type="range" id="globalScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500"></div>
+                        
+                        <div class="col-span-2">
+                            <label class="flex justify-between mb-1"><span>Rotação Global</span><span id="globalRotVal">0°</span></label>
+                            <input type="range" id="globalRot" min="0" max="360" value="0" class="w-full range-sm accent-emerald-500">
+                        </div>
+
+                        <div class="col-span-2 flex gap-2">
+                            <button id="globalFlipXBtn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1"><i data-lucide="flip-horizontal" class="w-3.5 h-3.5"></i> Espelhar X</button>
+                            <button id="globalFlipYBtn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1"><i data-lucide="flip-vertical" class="w-3.5 h-3.5"></i> Espelhar Y</button>
+                        </div>
+                    </div>
+
+                    <!-- Definições Originais de Robô -->
+                    <div class="grid grid-cols-2 gap-2 pt-1">
                         <div><label class="block mb-1">Ecrã X</label><input type="number" id="screenW" value="1100" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
                         <div><label class="block mb-1">Ecrã Y</label><input type="number" id="screenH" value="2442" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
-                        <div><label class="flex justify-between mb-1 text-emerald-400 font-bold"><span>Câmara X</span><span id="posXVal" class="text-emerald-300">0%</span></label><input type="range" id="posX" min="-500" max="500" value="0" class="w-full range-sm accent-emerald-500"></div>
-                        <div><label class="flex justify-between mb-1 text-emerald-400 font-bold"><span>Câmara Y</span><span id="posYVal" class="text-emerald-300">0%</span></label><input type="range" id="posY" min="-500" max="500" value="0" class="w-full range-sm accent-emerald-500"></div>
                     </div>
 
                     <div><label class="flex justify-between mb-1"><span>Ocupação Total</span><span id="percentValue">70%</span></label><input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full range-sm"></div>
@@ -314,6 +337,10 @@
         let gifEncoder = null;
         let lastGifFrameTime = 0;
 
+        // Variaveis de Transformação Global
+        let globalFlipX = false;
+        let globalFlipY = false;
+
         // DOM Els
         const els = {
             addSvgBtn: document.getElementById('addSvgBtn'), fileInput: document.getElementById('fileInput'),
@@ -339,8 +366,16 @@
             drawPause: document.getElementById('drawPause'), pauseValue: document.getElementById('pauseValue'),
             stepPrecision: document.getElementById('stepPrecision'), precisionValue: document.getElementById('precisionValue'),
             turboMode: document.getElementById('turboMode'), continuousLine: document.getElementById('continuousLine'), warmupMode: document.getElementById('warmupMode'),
-            wakeLockMode: document.getElementById('wakeLockMode'), posXInput: document.getElementById('posX'), posYInput: document.getElementById('posY'),
-            posXVal: document.getElementById('posXVal'), posYVal: document.getElementById('posYVal'),
+            wakeLockMode: document.getElementById('wakeLockMode'), 
+
+            // Novos elementos Globais
+            globalX: document.getElementById('globalX'), globalY: document.getElementById('globalY'),
+            globalXVal: document.getElementById('globalXVal'), globalYVal: document.getElementById('globalYVal'),
+            globalScale: document.getElementById('globalScale'), globalScaleVal: document.getElementById('globalScaleVal'),
+            globalScaleX: document.getElementById('globalScaleX'), globalScaleY: document.getElementById('globalScaleY'),
+            globalRot: document.getElementById('globalRot'), globalRotVal: document.getElementById('globalRotVal'),
+            globalFlipXBtn: document.getElementById('globalFlipXBtn'), globalFlipYBtn: document.getElementById('globalFlipYBtn'),
+            resetGlobalGeoBtn: document.getElementById('resetGlobalGeoBtn'),
             
             layersList: document.getElementById('layersList'), mergeBtn: document.getElementById('mergeBtn'),
             canvasWrapper: document.getElementById('canvasWrapper'), canvas: document.getElementById('previewCanvas'),
@@ -762,6 +797,42 @@
         els.itemFlipX.onclick = () => { const inst = projectItems.find(i => i.id === activeItemId); if(inst) { inst.flipX = !inst.flipX; loadItemTransforms(); triggerUpdate(); }};
         els.itemFlipY.onclick = () => { const inst = projectItems.find(i => i.id === activeItemId); if(inst) { inst.flipY = !inst.flipY; loadItemTransforms(); triggerUpdate(); }};
 
+        // EVENTOS DE TRANSFORMAÇÃO GLOBAL
+        const applyGlobalTrans = () => {
+            els.globalXVal.textContent = els.globalX.value + 'px';
+            els.globalYVal.textContent = els.globalY.value + 'px';
+            els.globalScaleX.value = els.globalScale.value;
+            els.globalScaleY.value = els.globalScale.value;
+            els.globalScaleVal.textContent = parseFloat(els.globalScale.value).toFixed(1) + 'x';
+            els.globalRotVal.textContent = els.globalRot.value + '°';
+            triggerUpdate();
+        };
+        const applyGlobalTransDirect = () => {
+            els.globalXVal.textContent = els.globalX.value + 'px';
+            els.globalYVal.textContent = els.globalY.value + 'px';
+            els.globalRotVal.textContent = els.globalRot.value + '°';
+            triggerUpdate();
+        };
+
+        els.globalScale.addEventListener('input', applyGlobalTrans);
+        els.globalX.addEventListener('input', applyGlobalTransDirect);
+        els.globalY.addEventListener('input', applyGlobalTransDirect);
+        els.globalScaleX.addEventListener('input', applyGlobalTransDirect);
+        els.globalScaleY.addEventListener('input', applyGlobalTransDirect);
+        els.globalRot.addEventListener('input', applyGlobalTransDirect);
+
+        els.globalFlipXBtn.onclick = () => { globalFlipX = !globalFlipX; els.globalFlipXBtn.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${globalFlipX ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`; triggerUpdate(); };
+        els.globalFlipYBtn.onclick = () => { globalFlipY = !globalFlipY; els.globalFlipYBtn.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${globalFlipY ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`; triggerUpdate(); };
+
+        els.resetGlobalGeoBtn.onclick = () => {
+            els.globalScale.value = 1; els.globalScaleX.value = 1; els.globalScaleY.value = 1;
+            els.globalX.value = 0; els.globalY.value = 0; els.globalRot.value = 0;
+            globalFlipX = false; globalFlipY = false;
+            els.globalFlipXBtn.className = `flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1`;
+            els.globalFlipYBtn.className = `flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-gray-300 flex justify-center gap-1`;
+            applyGlobalTrans();
+        };
+
         const handleGlobalUpdate = () => { els.percentValue.textContent = `${els.drawPercent.value}%`; els.marginValue.textContent = `${els.drawMargin.value}px`; triggerUpdate(); };
         els.drawPercent.addEventListener('input', handleGlobalUpdate); els.drawMargin.addEventListener('input', handleGlobalUpdate);
         els.screenW.addEventListener('change', triggerUpdate); els.screenH.addEventListener('change', triggerUpdate);
@@ -773,8 +844,6 @@
         els.drawPause.addEventListener('input', (e) => { els.pauseValue.textContent = `${e.target.value}ms`; triggerCodeUpdate(); });
         els.turboMode.addEventListener('change', triggerCodeUpdate);
         els.warmupMode.addEventListener('change', triggerCodeUpdate);
-        els.posXInput.addEventListener('input', (e) => { els.posXVal.textContent = `${e.target.value}%`; triggerUpdate(); });
-        els.posYInput.addEventListener('input', (e) => { els.posYVal.textContent = `${e.target.value}%`; triggerUpdate(); });
 
         els.resetGeoBtn.onclick = () => {
             els.itemScaleX.value = 1.0; els.itemScaleY.value = 1.0; els.itemScale.value = 1.0; els.itemScaleVal.textContent = "1.0x";
@@ -908,22 +977,27 @@
         // ==========================================
         function updateGeometryAndMap() {
             if(projectItems.length === 0) { scaledLayers = []; globalScaledTraces = []; drawStaticPreview(); generateCode(); updateStats(); return; }
-            stopAnimation(false); // Apenas interrompe a animação sem afetar o GIF ainda.
+            stopAnimation(false);
 
             const screenW = parseInt(els.screenW.value) || 1100;
             const screenH = parseInt(els.screenH.value) || 2442;
             const percent = parseInt(els.drawPercent.value) || 70;
             const margin = parseInt(els.drawMargin.value) || 20;
-            const pX = parseInt(els.posXInput.value) || 0; 
-            const pY = parseInt(els.posYInput.value) || 0;
-
+            
             const availW = (screenW * (percent/100)) - (margin * 2);
             const availH = (screenH * (percent/100)) - (margin * 2);
-            
             const finalScale = Math.min(availW / 1000, availH / 1000) || 1;
 
-            const screenCX = (screenW / 2) + (screenW * (pX / 100));
-            const screenCY = (screenH / 2) + (screenH * (pY / 100));
+            const screenCX = screenW / 2;
+            const screenCY = screenH / 2;
+
+            // Variáveis Globais
+            const gPosX = parseFloat(els.globalX.value) || 0;
+            const gPosY = parseFloat(els.globalY.value) || 0;
+            const gScaleX = parseFloat(els.globalScaleX.value) || 1;
+            const gScaleY = parseFloat(els.globalScaleY.value) || 1;
+            const gRotRad = (parseFloat(els.globalRot.value) || 0) * Math.PI / 180;
+            const gCos = Math.cos(gRotRad); const gSin = Math.sin(gRotRad);
 
             scaledLayers = [];
             globalScaledTraces = [];
@@ -946,13 +1020,25 @@
 
                     let cleanPath = []; let lastPt = null;
                     tr.forEach(p => {
+                        // 1. Transformação LOCAL
                         let px = (p.x - cx) * item.normScale; 
                         let py = (p.y - cy) * item.normScale;
                         if(item.flipX) px = -px; if(item.flipY) py = -py;
                         px *= item.scaleX; py *= item.scaleY;
                         let rx = px * cos - py * sin; let ry = px * sin + py * cos;
-                        let sx = Math.floor(screenCX + (rx + item.x) * finalScale);
-                        let sy = Math.floor(screenCY + (ry + item.y) * finalScale);
+                        
+                        let lx = rx + item.x;
+                        let ly = ry + item.y;
+
+                        // 2. Transformação GLOBAL
+                        if(globalFlipX) lx = -lx; if(globalFlipY) ly = -ly;
+                        lx *= gScaleX; ly *= gScaleY;
+                        let grx = lx * gCos - ly * gSin;
+                        let gry = lx * gSin + ly * gCos;
+
+                        // 3. Mapeamento Ecrã
+                        let sx = Math.floor(screenCX + grx * finalScale + gPosX);
+                        let sy = Math.floor(screenCY + gry * finalScale + gPosY);
                         
                         if(!lastPt) { cleanPath.push({x: sx, y: sy}); lastPt = {x: sx, y: sy}; }
                         else {
@@ -967,8 +1053,12 @@
                         if(item.flipX) px = -px; if(item.flipY) py = -py;
                         px *= item.scaleX; py *= item.scaleY;
                         let rx = px * cos - py * sin; let ry = px * sin + py * cos;
-                        let sx = Math.floor(screenCX + (rx + item.x) * finalScale);
-                        let sy = Math.floor(screenCY + (ry + item.y) * finalScale);
+                        let lx = rx + item.x; let ly = ry + item.y;
+                        if(globalFlipX) lx = -lx; if(globalFlipY) ly = -ly;
+                        lx *= gScaleX; ly *= gScaleY;
+                        let grx = lx * gCos - ly * gSin; let gry = lx * gSin + ly * gCos;
+                        let sx = Math.floor(screenCX + grx * finalScale + gPosX);
+                        let sy = Math.floor(screenCY + gry * finalScale + gPosY);
                         cleanPath.push({x: sx, y: sy});
                     }
 
@@ -1047,7 +1137,6 @@
         async function startGifRecording() {
             if (!globalScaledTraces.length) return;
             
-            // Interromper absolutamente qualquer simulação em curso antes de preparar o gravador
             stopAnimation(false);
             
             isRecordingGif = true;
@@ -1083,7 +1172,6 @@
                     lucide.createIcons();
                 });
                 
-                // Iniciar a animação mantendo o estado de gravação intacto
                 startAnimation(true);
             } catch(e) {
                 console.error("Erro ao iniciar GIF", e);
@@ -1167,8 +1255,6 @@
             animReqId = requestAnimationFrame(loop);
         }
 
-        els.stopBtn.onclick = () => stopAnimation(false);
-
         function stopAnimation(isComplete = false) { 
             isAnimating=false; 
             if(animReqId) cancelAnimationFrame(animReqId); 
@@ -1242,12 +1328,24 @@
             if (warmup && visL.length > 0 && visL[0].screenTraces.length > 0) {
                 const tr = visL[0].screenTraces[0];
                 const tAq = Math.max(3, Math.min(15, Math.floor(tr.length * 0.25)));
-                c.push(`  { nome: "Pré-Traço Inicial (Anti-Bug)", isWarmup: true, del: 0, trs: [ [${tr.slice(0, tAq).map(p=>`[${p.x},${p.y}]`).join(',')}] ] },`); 
+                const warmupStr = tr.slice(0, tAq).map(p=>`[${p.x},${p.y}]`).join(', ');
+                c.push(`  { nome: "Pré-Traço Inicial (Anti-Bug)", isWarmup: true, del: 0, trs: [\n    [\n      ${warmupStr}\n    ]\n  ] },`); 
             }
             
             visL.forEach((l, idx) => {
                 c.push(`  { nome: "${l.nome}", del: ${l.delay * 1000}, trs: [`);
-                c.push(l.screenTraces.map(tr => `    [${tr.map(p=>`[${p.x},${p.y}]`).join(',')}]`).join(',\n'));
+                
+                // CORREÇÃO DO SYNTAX ERROR: Quebrando a string de matrizes gigantes em várias linhas a cada 10 coordenadas
+                const trStrs = l.screenTraces.map(tr => {
+                    let pts = tr.map(p => `[${p.x},${p.y}]`);
+                    let chunks = [];
+                    for(let i=0; i < pts.length; i+=10) {
+                        chunks.push(pts.slice(i, i+10).join(', '));
+                    }
+                    return `    [\n      ${chunks.join(',\n      ')}\n    ]`;
+                });
+                
+                c.push(trStrs.join(',\n'));
                 c.push(`  ] }${idx < visL.length - 1 ? ',' : ''}`);
             });
             c.push(`];\n`);
