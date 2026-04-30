@@ -58,7 +58,12 @@
                     <p class="text-[10px] text-gray-400 font-medium">Composição de Múltiplos SVGs • Texto Vetorial • Exportação GIF</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3 mt-3 md:mt-0">
+            <div class="flex items-center gap-3 mt-3 md:mt-0 flex-wrap justify-end">
+                <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-blue-500/10 rounded-lg border border-blue-500/20" title="Impede a tela de apagar durante cálculos pesados">
+                    <i data-lucide="sun" class="w-3.5 h-3.5 text-blue-400 mr-2"></i>
+                    <span class="text-xs font-medium text-blue-300 mr-2">Tela Acesa</span>
+                    <input type="checkbox" id="wakeLockMode" checked class="w-3.5 h-3.5 accent-blue-500 rounded cursor-pointer">
+                </label>
                 <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 mr-2"></i>
                     <span class="text-xs font-medium text-amber-300 mr-2">Turbo</span>
@@ -182,7 +187,7 @@
                     <!-- Novas Transformações Globais -->
                     <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-700">
                         <div><label class="flex justify-between mb-1"><span>Pos X (Global)</span><span id="globalXVal" class="text-emerald-300">0</span></label><input type="range" id="globalX" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
-                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="textemerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="text-emerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
                         
                         <div class="col-span-2">
                             <label class="flex justify-between mb-1"><span class="font-bold text-emerald-400">Escala Geral Global</span><span id="globalScaleVal" class="text-emerald-400 font-bold">1.0x</span></label>
@@ -398,10 +403,34 @@
         // ==========================================
         async function requestWakeLock() {
             if (!('wakeLock' in navigator) || !els.wakeLockMode.checked) return;
-            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { els.wakeLockMode.checked = false; els.wakeLockMode.disabled = true; }
+            try { 
+                if (wakeLock === null) {
+                    wakeLock = await navigator.wakeLock.request('screen'); 
+                }
+            } catch (err) { 
+                console.warn("WakeLock Error:", err); 
+                els.wakeLockMode.checked = false; 
+            }
         }
-        function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(() => {}); } }
-        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && els.wakeLockMode.checked) await requestWakeLock(); });
+        function releaseWakeLock() { 
+            if (wakeLock !== null) { 
+                wakeLock.release().then(() => { wakeLock = null; }).catch(() => {}); 
+            } 
+        }
+        
+        document.addEventListener('visibilitychange', async () => { 
+            if (wakeLock !== null && document.visibilityState === 'visible' && isProcessing && els.wakeLockMode.checked) {
+                await requestWakeLock(); 
+            }
+        });
+
+        els.wakeLockMode.addEventListener('change', async () => {
+            if (els.wakeLockMode.checked && isProcessing) {
+                await requestWakeLock();
+            } else if (!els.wakeLockMode.checked) {
+                releaseWakeLock();
+            }
+        });
 
         // ==========================================
         // GESTOR DE PROJETO (TEXTO E SVGs)
@@ -409,6 +438,10 @@
         els.addSvgBtn.onclick = () => els.fileInput.click();
         els.fileInput.onchange = async (e) => {
             if(!e.target.files.length) return;
+            isProcessing = true;
+            await requestWakeLock();
+            els.progressOverlay.classList.remove('hidden');
+
             for(let file of e.target.files) {
                 if(!file.name.toLowerCase().endsWith('.svg')) continue;
                 const text = await file.text();
@@ -423,6 +456,11 @@
                 await extractBasePaths(id);
             }
             e.target.value = ''; 
+            
+            isProcessing = false;
+            releaseWakeLock();
+            els.progressOverlay.classList.add('hidden');
+            renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
         };
 
         function textToSvgString(text, fontUrl) {
@@ -485,6 +523,7 @@
             if(!text) return;
 
             isProcessing = true; 
+            await requestWakeLock();
             els.progressOverlay.classList.remove('hidden');
             els.progressTitle.textContent = "Desenhando texto...";
             els.statusMsg.textContent = "A fundir letras..."; els.progressBar.style.width = "20%";
@@ -505,7 +544,12 @@
             } catch(e) {
                 console.error(e);
                 els.statusMsg.textContent = "Erro na Fonte!";
-                isProcessing = false; setTimeout(() => els.progressOverlay.classList.add('hidden'), 2000);
+                await new Promise(r => setTimeout(r, 2000));
+            } finally {
+                isProcessing = false;
+                releaseWakeLock();
+                els.progressOverlay.classList.add('hidden');
+                renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
             }
         };
 
@@ -518,6 +562,7 @@
             if(!newText || (newText === inst.textContent && newFont === inst.fontUrl)) return;
 
             isProcessing = true; 
+            await requestWakeLock();
             els.progressOverlay.classList.remove('hidden');
             els.progressTitle.textContent = "A atualizar texto...";
             els.statusMsg.textContent = "A re-fundir curvas..."; els.progressBar.style.width = "40%";
@@ -532,7 +577,12 @@
             } catch(e) {
                 console.error(e);
                 els.statusMsg.textContent = "Erro ao atualizar texto!";
-                isProcessing = false; setTimeout(() => els.progressOverlay.classList.add('hidden'), 2000);
+                await new Promise(r => setTimeout(r, 2000));
+            } finally {
+                isProcessing = false;
+                releaseWakeLock();
+                els.progressOverlay.classList.add('hidden');
+                renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
             }
         };
         els.editTextInput.addEventListener('change', handleTextEdit);
@@ -577,8 +627,6 @@
             const item = projectItems.find(i => i.id === itemId);
             if(!item) return;
             
-            isProcessing = true; 
-            els.progressOverlay.classList.remove('hidden');
             els.progressTitle.textContent = item.isText ? "Desenhando texto..." : `A ler ${item.name}...`;
             els.statusMsg.textContent = "A purificar estrutura e resolver grupos/matrizes...";
             els.progressBar.style.width = "5%"; els.progText.textContent = "5%";
@@ -731,11 +779,6 @@
                 item.normScale = 1000 / Math.max(tW, tH);
 
             } catch(e) { console.error(e); } 
-            finally {
-                isProcessing = false; 
-                els.progressOverlay.classList.add('hidden');
-                renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
-            }
         }
 
         // ==========================================
@@ -1143,6 +1186,9 @@
             stopAnimation(false);
             
             isRecordingGif = true;
+            isProcessing = true;
+            await requestWakeLock();
+
             els.exportGifBtn.disabled = true;
             els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5 animate-pulse"></i> A gravar...';
             lucide.createIcons();
@@ -1169,6 +1215,8 @@
                     URL.revokeObjectURL(url);
                     
                     isRecordingGif = false;
+                    isProcessing = false;
+                    releaseWakeLock();
                     gifEncoder = null;
                     els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                     els.exportGifBtn.disabled = false;
@@ -1179,6 +1227,8 @@
             } catch(e) {
                 console.error("Erro ao iniciar GIF", e);
                 isRecordingGif = false;
+                isProcessing = false;
+                releaseWakeLock();
                 els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                 els.exportGifBtn.disabled = false;
                 lucide.createIcons();
@@ -1273,6 +1323,8 @@
                     gifEncoder.render();
                 } else {
                     isRecordingGif = false;
+                    isProcessing = false;
+                    releaseWakeLock();
                     gifEncoder = null;
                     els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                     els.exportGifBtn.disabled = false;
