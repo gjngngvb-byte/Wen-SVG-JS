@@ -182,7 +182,7 @@
                     <!-- Novas Transformações Globais -->
                     <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-700">
                         <div><label class="flex justify-between mb-1"><span>Pos X (Global)</span><span id="globalXVal" class="text-emerald-300">0</span></label><input type="range" id="globalX" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
-                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="text-emerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="textemerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
                         
                         <div class="col-span-2">
                             <label class="flex justify-between mb-1"><span class="font-bold text-emerald-400">Escala Geral Global</span><span id="globalScaleVal" class="text-emerald-400 font-bold">1.0x</span></label>
@@ -614,16 +614,18 @@
                     });
                 }
                 
-                // Define tamanho base sem afetar Viewbox
-                let vW = 1000, vH = 1000;
-                if(svgEl.hasAttribute("viewBox")) {
-                    const vb = svgEl.getAttribute("viewBox").split(/\s+|,/);
-                    if(vb.length === 4) { vW = parseFloat(vb[2]); vH = parseFloat(vb[3]); }
-                } else {
-                    if(svgEl.hasAttribute("width")) vW = parseFloat(svgEl.getAttribute("width"));
-                    if(svgEl.hasAttribute("height")) vH = parseFloat(svgEl.getAttribute("height"));
+                // Garante que existe um viewBox para manter a proporção simétrica sem achatar
+                if (!svgEl.hasAttribute("viewBox")) {
+                    let w = parseFloat(svgEl.getAttribute("width")) || 1000;
+                    let h = parseFloat(svgEl.getAttribute("height")) || 1000;
+                    svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
                 }
-                svgEl.style.width = vW + 'px'; svgEl.style.height = vH + 'px'; 
+                // Remove larguras fixas que causam achatamento (squashing) devido ao override CSS
+                svgEl.removeAttribute('width');
+                svgEl.removeAttribute('height');
+                // Força rendering numa caixa de 1000px quadrada perfeita
+                svgEl.style.width = '1000px';
+                svgEl.style.height = '1000px'; 
 
                 document.getElementById('svgHiddenContainer').innerHTML = ''; 
                 document.getElementById('svgHiddenContainer').appendChild(svgEl);
@@ -668,7 +670,6 @@
                             if (!isNaN(pLocal.x) && !isNaN(pLocal.y) && Number.isFinite(pLocal.x) && Number.isFinite(pLocal.y)) {
                                 
                                 // O DETETOR DE SALTOS (Pen Lift Logic)
-                                // Se a distância física entre os pontos exceder muito o baseStep, significa que há um gap físico no SVG (ex: M command ou buracos).
                                 if (lastLocalPt) {
                                     let localDx = pLocal.x - lastLocalPt.x;
                                     let localDy = pLocal.y - lastLocalPt.y;
@@ -983,13 +984,15 @@
             const screenH = parseInt(els.screenH.value) || 2442;
             const percent = parseInt(els.drawPercent.value) || 70;
             const margin = parseInt(els.drawMargin.value) || 20;
-            
+            const pX = parseInt(els.posXInput.value) || 0; 
+            const pY = parseInt(els.posYInput.value) || 0;
+
             const availW = (screenW * (percent/100)) - (margin * 2);
             const availH = (screenH * (percent/100)) - (margin * 2);
             const finalScale = Math.min(availW / 1000, availH / 1000) || 1;
 
-            const screenCX = screenW / 2;
-            const screenCY = screenH / 2;
+            const screenCX = (screenW / 2) + (screenW * (pX / 100));
+            const screenCY = (screenH / 2) + (screenH * (pY / 100));
 
             // Variáveis Globais
             const gPosX = parseFloat(els.globalX.value) || 0;
@@ -1335,7 +1338,6 @@
             visL.forEach((l, idx) => {
                 c.push(`  { nome: "${l.nome}", del: ${l.delay * 1000}, trs: [`);
                 
-                // CORREÇÃO DO SYNTAX ERROR: Quebrando a string de matrizes gigantes em várias linhas a cada 10 coordenadas
                 const trStrs = l.screenTraces.map(tr => {
                     let pts = tr.map(p => `[${p.x},${p.y}]`);
                     let chunks = [];
