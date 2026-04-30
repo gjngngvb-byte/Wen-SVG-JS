@@ -30,7 +30,21 @@
         .range-sm { height: 4px; accent-color: #6366f1; }
     </style>
 </head>
-<body class="min-h-screen font-sans p-2 md:p-4 overflow-x-hidden">
+<body class="min-h-screen font-sans p-2 md:p-4 overflow-x-hidden relative">
+
+    <!-- OVERLAY DE CARREGAMENTO -->
+    <div id="progressOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-opacity duration-300">
+        <div class="bg-slate-800 p-6 rounded-xl shadow-2xl border border-slate-600 w-80 max-w-[90%] transform scale-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-white font-bold text-sm" id="progressTitle">Importando...</h3>
+                <span class="text-indigo-400 font-bold text-xs" id="progressText">0%</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-3 border border-slate-700 overflow-hidden relative">
+                <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <p class="text-slate-400 text-[10px] mt-3 text-center animate-pulse" id="statusMsg">A extrair malha vetorial...</p>
+        </div>
+    </div>
 
     <div class="max-w-[1400px] mx-auto space-y-4">
         <!-- HEADER -->
@@ -41,7 +55,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-white leading-tight">Auto.js Vector Studio</h1>
-                    <p class="text-[10px] text-gray-400 font-medium">Composição de Múltiplos SVGs • Texto Vetorial Unido • Exportação GIF</p>
+                    <p class="text-[10px] text-gray-400 font-medium">Composição de Múltiplos SVGs • Texto Vetorial • Exportação GIF</p>
                 </div>
             </div>
             <div class="flex items-center gap-3 mt-3 md:mt-0">
@@ -102,13 +116,15 @@
                         </div>
                     </div>
 
-                    <div id="progressContainer" class="hidden mt-1">
-                        <div class="flex justify-between text-[10px] mb-1">
-                            <span class="text-indigo-400 font-medium" id="statusMsg">Processando...</span>
-                            <span class="text-indigo-400 font-bold" id="progressText">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 rounded-full h-1.5">
-                            <div id="progressBar" class="bg-indigo-500 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                    <!-- Visualizador Original (Referência) -->
+                    <div class="pt-3 border-t border-slate-700 space-y-2">
+                        <h3 class="text-xs font-bold text-gray-300 flex items-center gap-1">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Visualizador Original
+                        </h3>
+                        <div class="bg-slate-900 border border-slate-700 rounded-lg p-2 h-32 flex items-center justify-center relative overflow-hidden transition-colors" id="originalSvgBg">
+                            <div id="originalSvgViewer" class="w-full h-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-full">
+                                <span class="text-[10px] text-gray-600">Nenhum SVG selecionado</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -136,8 +152,8 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 text-xs text-gray-400">
-                        <div><label class="flex justify-between mb-1"><span>Pos X (Local)</span><span id="itemXVal" class="text-indigo-300">0px</span></label><input type="range" id="itemX" min="-621" max="621" value="0" class="w-full range-sm"></div>
-                        <div><label class="flex justify-between mb-1"><span>Pos Y (Local)</span><span id="itemYVal" class="text-indigo-300">0px</span></label><input type="range" id="itemY" min="-621" max="621" value="0" class="w-full range-sm"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos X (Local)</span><span id="itemXVal" class="text-indigo-300">0</span></label><input type="range" id="itemX" min="-2000" max="2000" value="0" class="w-full range-sm"></div>
+                        <div><label class="flex justify-between mb-1"><span>Pos Y (Local)</span><span id="itemYVal" class="text-indigo-300">0</span></label><input type="range" id="itemY" min="-2000" max="2000" value="0" class="w-full range-sm"></div>
                         <div class="col-span-2">
                             <label class="flex justify-between mb-1"><span class="font-bold text-indigo-400">Escala Geral</span><span id="itemScaleVal" class="text-indigo-400 font-bold">1.0x</span></label>
                             <input type="range" id="itemScale" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-indigo-500">
@@ -170,10 +186,10 @@
                     </div>
 
                     <div><label class="flex justify-between mb-1"><span>Ocupação Total</span><span id="percentValue">70%</span></label><input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full range-sm"></div>
-                    <div><label class="flex justify-between mb-1"><span>Margem Posição</span><span id="marginValue">20px</span></label><input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full range-sm"></div>
+                    <div><label class="flex justify-between mb-1"><span>Margem Ecrã</span><span id="marginValue">20px</span></label><input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full range-sm"></div>
                     <div><label class="flex justify-between mb-1 text-purple-400 font-bold"><span>Velocidade</span><span id="speedValue">2.0x</span></label><input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full range-sm accent-purple-500"></div>
-                    <div><label class="flex justify-between mb-1 text-pink-400"><span>Pausa Levantar Dedo</span><span id="pauseValue">35ms</span></label><input type="range" id="drawPause" min="10" max="500" step="5" value="35" class="w-full range-sm accent-pink-500"></div>
-                    <div><label class="flex justify-between mb-1 text-sky-400"><span>Precisão Extrema (Step)</span><span id="precisionValue">3px</span></label><input type="range" id="stepPrecision" min="1" max="20" value="3" class="w-full range-sm accent-sky-500"></div>
+                    <div><label class="flex justify-between mb-1 text-pink-400"><span>Pausa Levantar</span><span id="pauseValue">35ms</span></label><input type="range" id="drawPause" min="10" max="500" step="5" value="35" class="w-full range-sm accent-pink-500"></div>
+                    <div><label class="flex justify-between mb-1 text-sky-400"><span>Qualidade Leitura</span><span id="precisionValue">3px</span></label><input type="range" id="stepPrecision" min="1" max="20" value="3" class="w-full range-sm accent-sky-500"></div>
                 </div>
             </div>
 
@@ -188,7 +204,7 @@
                         <div class="flex gap-2">
                             <button id="playBtn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition"><i data-lucide="play" class="w-3.5 h-3.5"></i> Simular</button>
                             <button id="stopBtn" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition hidden"><i data-lucide="square" class="w-3.5 h-3.5"></i> Parar</button>
-                            <button id="exportGifBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition"><i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação</button>
+                            <button id="exportGifBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded shadow flex items-center gap-1 text-xs font-bold transition"><i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar</button>
                         </div>
                     </div>
                     
@@ -198,7 +214,7 @@
                         <button id="zoomOutBtn" class="bg-slate-800 p-1.5 rounded border border-slate-600 text-gray-300 hover:text-white"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
                     </div>
                     
-                    <div id="canvasWrapper" class="flex-1 rounded-xl overflow-hidden relative border border-slate-700 bg-slate-900">
+                    <div id="canvasWrapper" class="flex-1 rounded-xl overflow-hidden relative border border-slate-700 bg-slate-900 shadow-inner">
                         <canvas id="previewCanvas" class="w-full h-full cursor-grab active:cursor-grabbing absolute inset-0 touch-none"></canvas>
                         <div id="noPreviewMsg" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm pointer-events-none">
                             Área de Desenho Livre
@@ -210,7 +226,11 @@
                         <div class="flex-1 mx-2 h-1.5 rounded-full" style="background: linear-gradient(to right, hsl(280, 80%, 80%), hsl(280, 80%, 30%))"></div>
                         <span>Topo (Escuro)</span>
                     </div>
-                    <div id="statsDisplay" class="mt-2 text-center text-[10px] text-gray-400 font-mono">Aguardando composição...</div>
+                    
+                    <!-- ESTATÍSTICAS DETALHADAS -->
+                    <div id="statsDisplay" class="mt-3 p-2 bg-slate-800/50 rounded-lg border border-slate-700 text-center text-[10px] text-gray-400 font-mono tracking-wide leading-relaxed">
+                        Aguardando composição...
+                    </div>
                 </div>
 
             </div>
@@ -299,9 +319,10 @@
             addSvgBtn: document.getElementById('addSvgBtn'), fileInput: document.getElementById('fileInput'),
             projectItemsList: document.getElementById('projectItemsList'), emptyProjectMsg: document.getElementById('emptyProjectMsg'),
             
-            // Novos elementos de Texto
             newTextInput: document.getElementById('newTextInput'), newTextFont: document.getElementById('newTextFont'), addTextBtn: document.getElementById('addTextBtn'),
             textEditGroup: document.getElementById('textEditGroup'), editTextInput: document.getElementById('editTextInput'), editTextFont: document.getElementById('editTextFont'),
+
+            originalSvgViewer: document.getElementById('originalSvgViewer'), originalSvgBg: document.getElementById('originalSvgBg'),
 
             itemTransformPanel: document.getElementById('itemTransformPanel'), activeItemName: document.getElementById('activeItemName'),
             itemX: document.getElementById('itemX'), itemY: document.getElementById('itemY'),
@@ -325,8 +346,14 @@
             canvasWrapper: document.getElementById('canvasWrapper'), canvas: document.getElementById('previewCanvas'),
             playBtn: document.getElementById('playBtn'), stopBtn: document.getElementById('stopBtn'), exportGifBtn: document.getElementById('exportGifBtn'),
             outputCode: document.getElementById('outputCode'), statsDisplay: document.getElementById('statsDisplay'),
-            progContainer: document.getElementById('progressContainer'), progBar: document.getElementById('progressBar'), progText: document.getElementById('progressText'),
-            statusMsg: document.getElementById('statusMsg'), jsFileName: document.getElementById('jsFileName'),
+            
+            progressOverlay: document.getElementById('progressOverlay'),
+            progressTitle: document.getElementById('progressTitle'),
+            progressBar: document.getElementById('progressBar'), 
+            progText: document.getElementById('progressText'),
+            statusMsg: document.getElementById('statusMsg'), 
+            
+            jsFileName: document.getElementById('jsFileName'),
             resetGeoBtn: document.getElementById('resetGeoBtn')
         };
         const ctx = els.canvas.getContext('2d');
@@ -344,8 +371,6 @@
         // ==========================================
         // GESTOR DE PROJETO (TEXTO E SVGs)
         // ==========================================
-        
-        // 1. IMPORTAR SVG NATIVO
         els.addSvgBtn.onclick = () => els.fileInput.click();
         els.fileInput.onchange = async (e) => {
             if(!e.target.files.length) return;
@@ -357,7 +382,7 @@
                 projectItems.push({
                     id, name: file.name, content: text,
                     x: 0, y: 0, scaleX: 1, scaleY: 1, rot: 0, flipX: false, flipY: false,
-                    basePaths: [], cx: 0, cy: 0, isText: false
+                    basePaths: [], cx: 0, cy: 0, isText: false, normScale: 1
                 });
                 activeItemId = id;
                 await extractBasePaths(id);
@@ -365,48 +390,44 @@
             e.target.value = ''; 
         };
 
-        // 2. IMPORTAR TEXTO COMO SVG (Unido com PaperJS)
         function textToSvgString(text, fontUrl) {
             return new Promise((resolve, reject) => {
                 if(!text.trim()) return reject("Texto vazio.");
                 
                 const makeSvg = (font) => {
-                    // Separa o contorno de cada letra original usando a biblioteca OpenType
                     const glyphPaths = font.getPaths(text, 0, 0, 100);
-                    let finalPaperPath = null;
+                    let finalPaperItem = null;
                     
                     glyphPaths.forEach(gp => {
                         const d = gp.toPathData(2);
                         if (!d || d === "") return;
                         
                         try {
-                            // Cria um caminho da letra e FAZ UNIÃO com as letras anteriores!
-                            // Isto garante que uma fonte cursiva gere UM único contorno e não rabisque por cima.
                             const pPath = new paper.CompoundPath(d);
-                            if (!finalPaperPath) {
-                                finalPaperPath = pPath;
+                            if (!finalPaperItem) {
+                                finalPaperItem = pPath;
                             } else {
-                                const united = finalPaperPath.unite(pPath);
-                                finalPaperPath.remove(); // Limpa as memórias cruzadas
+                                const united = finalPaperItem.unite(pPath);
+                                finalPaperItem.remove(); 
                                 pPath.remove();
-                                finalPaperPath = united;
+                                finalPaperItem = united;
                             }
                         } catch(e) { console.warn("Erro a fundir letra", e); }
                     });
 
-                    if (!finalPaperPath) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>`;
+                    if (!finalPaperItem) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>`;
 
-                    const d = finalPaperPath.pathData;
-                    const bounds = finalPaperPath.bounds;
+                    const bounds = finalPaperItem.bounds;
                     const padding = 10;
                     const vx = bounds.x - padding; const vy = bounds.y - padding;
                     const vw = bounds.width + padding * 2; const vh = bounds.height + padding * 2;
                     
-                    // Limpar buffer da ferramenta PaperJS
-                    finalPaperPath.remove();
+                    const svgInner = finalPaperItem.exportSVG({ asString: true });
+                    
+                    finalPaperItem.remove();
                     paper.project.clear();
 
-                    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx} ${vy} ${vw} ${vh}"><path d="${d}" fill="none" stroke="black"/></svg>`;
+                    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx} ${vy} ${vw} ${vh}">${svgInner}</svg>`;
                 };
 
                 opentype.load(fontUrl, function(err, font) {
@@ -428,8 +449,10 @@
             const font = els.newTextFont.value;
             if(!text) return;
 
-            isProcessing = true; els.progContainer.classList.remove('hidden');
-            els.statusMsg.textContent = "A fundir e desenhar texto..."; els.progBar.style.width = "20%";
+            isProcessing = true; 
+            els.progressOverlay.classList.remove('hidden');
+            els.progressTitle.textContent = "Desenhando texto...";
+            els.statusMsg.textContent = "A fundir letras..."; els.progressBar.style.width = "20%";
 
             try {
                 const svgString = await textToSvgString(text, font);
@@ -439,19 +462,18 @@
                     id, name: `Texto: ${text.substring(0,8)}`, content: svgString,
                     x: 0, y: 0, scaleX: 1, scaleY: 1, rot: 0, flipX: false, flipY: false,
                     basePaths: [], cx: 0, cy: 0, 
-                    isText: true, textContent: text, fontUrl: font
+                    isText: true, textContent: text, fontUrl: font, normScale: 1
                 });
                 activeItemId = id;
-                els.newTextInput.value = ''; // limpa
+                els.newTextInput.value = ''; 
                 await extractBasePaths(id);
             } catch(e) {
                 console.error(e);
                 els.statusMsg.textContent = "Erro na Fonte!";
-                isProcessing = false; setTimeout(() => els.progContainer.classList.add('hidden'), 2000);
+                isProcessing = false; setTimeout(() => els.progressOverlay.classList.add('hidden'), 2000);
             }
         };
 
-        // 3. ATUALIZAR ITEM DE TEXTO EXISTENTE
         const handleTextEdit = async () => {
             const inst = projectItems.find(i => i.id === activeItemId);
             if(!inst || !inst.isText) return;
@@ -460,26 +482,26 @@
             const newFont = els.editTextFont.value;
             if(!newText || (newText === inst.textContent && newFont === inst.fontUrl)) return;
 
-            isProcessing = true; els.progContainer.classList.remove('hidden');
-            els.statusMsg.textContent = "A atualizar e fundir curvas do texto..."; els.progBar.style.width = "40%";
+            isProcessing = true; 
+            els.progressOverlay.classList.remove('hidden');
+            els.progressTitle.textContent = "A atualizar texto...";
+            els.statusMsg.textContent = "A re-fundir curvas..."; els.progressBar.style.width = "40%";
 
             try {
                 inst.textContent = newText; inst.fontUrl = newFont;
                 inst.name = `Texto: ${newText.substring(0,8)}`;
                 inst.content = await textToSvgString(newText, newFont);
                 
-                // Apaga antigas camadas associadas e volta a extrair
                 rawLayers = rawLayers.filter(l => l.itemId !== inst.id);
                 await extractBasePaths(inst.id);
             } catch(e) {
                 console.error(e);
                 els.statusMsg.textContent = "Erro ao atualizar texto!";
-                isProcessing = false; setTimeout(() => els.progContainer.classList.add('hidden'), 2000);
+                isProcessing = false; setTimeout(() => els.progressOverlay.classList.add('hidden'), 2000);
             }
         };
         els.editTextInput.addEventListener('change', handleTextEdit);
         els.editTextFont.addEventListener('change', handleTextEdit);
-
 
         function renderProjectItems() {
             els.projectItemsList.innerHTML = '';
@@ -514,18 +536,27 @@
         }
 
         // ==========================================
-        // EXTRACÇÃO DE BASE (DOM -> JS)
+        // EXTRACÇÃO DE BASE E DETEÇÃO DE SALTOS (DOM -> JS)
         // ==========================================
         async function extractBasePaths(itemId) {
             const item = projectItems.find(i => i.id === itemId);
             if(!item) return;
             
+            isProcessing = true; 
+            els.progressOverlay.classList.remove('hidden');
+            els.progressTitle.textContent = item.isText ? "Desenhando texto..." : `A ler ${item.name}...`;
+            els.statusMsg.textContent = "A purificar estrutura e resolver grupos/matrizes...";
+            els.progressBar.style.width = "5%"; els.progText.textContent = "5%";
+            
+            await new Promise(r => setTimeout(r, 50));
+
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(item.content, "image/svg+xml");
                 const svgEl = doc.querySelector('svg');
                 if (!svgEl) throw new Error("SVG inválido.");
                 
+                // Desempacota "use" tags
                 for(let depth = 0; depth < 5; depth++) {
                     const useElements = Array.from(svgEl.querySelectorAll('use'));
                     if(useElements.length === 0) break;
@@ -548,21 +579,7 @@
                     });
                 }
                 
-                const paths = Array.from(svgEl.querySelectorAll('path'));
-                paths.forEach(path => {
-                    const d = path.getAttribute('d'); if (!d) return;
-                    const parts = d.replace(/([Mm])/g, '|$1').split('|').filter(p => p.trim().length > 0);
-                    if (parts.length > 1) {
-                        const parent = path.parentNode;
-                        parts.forEach(part => {
-                            const newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            Array.from(path.attributes).forEach(attr => { if (attr.name !== 'd' && attr.name !== 'id') newPath.setAttribute(attr.name, attr.value); });
-                            newPath.setAttribute('d', part); parent.insertBefore(newPath, path);
-                        });
-                        path.remove();
-                    }
-                });
-
+                // Define tamanho base sem afetar Viewbox
                 let vW = 1000, vH = 1000;
                 if(svgEl.hasAttribute("viewBox")) {
                     const vb = svgEl.getAttribute("viewBox").split(/\s+|,/);
@@ -596,6 +613,8 @@
                 let layerCount = 1;
                 let currentLengthProcessed = 0; let pointCounter = 0;
                 let lastYield = performance.now();
+                
+                els.statusMsg.textContent = "A extrair coordenadas vetoriais puras com deteção de saltos...";
 
                 for (let i = 0; i < validShapes.length; i++) {
                     let shape = validShapes[i].el;
@@ -605,17 +624,42 @@
                     if (!relCTM) continue;
 
                     let currentLine = [];
+                    let lastLocalPt = null;
+
                     const processPt = (l) => {
                         try {
                             if (!Number.isFinite(l)) return; 
                             let pLocal = shape.getPointAtLength(l);
                             if (!isNaN(pLocal.x) && !isNaN(pLocal.y) && Number.isFinite(pLocal.x) && Number.isFinite(pLocal.y)) {
+                                
+                                // O DETETOR DE SALTOS (Pen Lift Logic)
+                                // Se a distância física entre os pontos exceder muito o baseStep, significa que há um gap físico no SVG (ex: M command ou buracos).
+                                if (lastLocalPt) {
+                                    let localDx = pLocal.x - lastLocalPt.x;
+                                    let localDy = pLocal.y - lastLocalPt.y;
+                                    if ((localDx*localDx + localDy*localDy) > 150) { 
+                                        if (currentLine.length > 1) {
+                                            const pathIdx = basePaths.length;
+                                            basePaths.push(currentLine);
+                                            rawLayers.push({
+                                                id: Date.now() + Math.random(), itemId: item.id, pathIndices: [pathIdx],
+                                                nome: `${item.name.substring(0,6)} - L${layerCount++}`,
+                                                delay: 0, selected: false, visible: true
+                                            });
+                                        }
+                                        currentLine = [];
+                                    }
+                                }
+
                                 svgPt.x = pLocal.x; svgPt.y = pLocal.y; 
                                 let globalPt = svgPt.matrixTransform(relCTM); 
                                 let pScreen = { x: globalPt.x, y: globalPt.y }; 
                                 currentLine.push(pScreen); 
+                                
                                 if(pScreen.x < localMinX) localMinX = pScreen.x; if(pScreen.x > localMaxX) localMaxX = pScreen.x;
                                 if(pScreen.y < localMinY) localMinY = pScreen.y; if(pScreen.y > localMaxY) localMaxY = pScreen.y;
+                                
+                                lastLocalPt = pLocal;
                             }
                         } catch (e) {}
                     };
@@ -625,7 +669,7 @@
                         currentLengthProcessed += baseStep; pointCounter++;
                         if (pointCounter % 150 === 0 && performance.now() - lastYield > 15) {
                             let pct = Math.min(95, Math.floor((currentLengthProcessed / totalLength) * 100));
-                            els.progBar.style.width = `${pct}%`; els.progText.textContent = `${pct}%`;
+                            els.progressBar.style.width = `${pct}%`; els.progText.textContent = `${pct}%`;
                             await new Promise(r => setTimeout(r, 0)); lastYield = performance.now();
                         }
                     }
@@ -635,7 +679,7 @@
                         const pathIdx = basePaths.length;
                         basePaths.push(currentLine);
                         rawLayers.push({
-                            id: Date.now() + i, itemId: item.id, pathIndices: [pathIdx],
+                            id: Date.now() + Math.random(), itemId: item.id, pathIndices: [pathIdx],
                             nome: `${item.name.substring(0,6)} - L${layerCount++}`,
                             delay: 0, selected: false, visible: true
                         });
@@ -645,10 +689,15 @@
                 item.basePaths = basePaths;
                 item.cx = (localMinX + localMaxX) / 2;
                 item.cy = (localMinY + localMaxY) / 2;
+                
+                let tW = localMaxX - localMinX; let tH = localMaxY - localMinY;
+                if(tW <= 0) tW = 1; if(tH <= 0) tH = 1;
+                item.normScale = 1000 / Math.max(tW, tH);
 
             } catch(e) { console.error(e); } 
             finally {
-                isProcessing = false; els.progContainer.classList.add('hidden');
+                isProcessing = false; 
+                els.progressOverlay.classList.add('hidden');
                 renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
             }
         }
@@ -658,14 +707,22 @@
         // ==========================================
         function loadItemTransforms() {
             const inst = projectItems.find(i => i.id === activeItemId);
-            if(!inst) { els.itemTransformPanel.classList.add('opacity-50', 'pointer-events-none'); els.activeItemName.textContent = "Nenhum"; return; }
+            
+            if(!inst) {
+                els.originalSvgViewer.innerHTML = '<span class="text-[10px] text-gray-600">Nenhum SVG selecionado</span>';
+                els.originalSvgBg.classList.remove('bg-slate-200'); els.originalSvgBg.classList.add('bg-slate-900');
+                els.itemTransformPanel.classList.add('opacity-50', 'pointer-events-none'); els.activeItemName.textContent = "Nenhum"; return; 
+            }
+            
+            els.originalSvgBg.classList.remove('bg-slate-900'); els.originalSvgBg.classList.add('bg-slate-200');
+            els.originalSvgViewer.innerHTML = inst.content;
+            const svg = els.originalSvgViewer.querySelector('svg');
+            if(svg) { svg.style.maxWidth = '100%'; svg.style.maxHeight = '100%'; svg.style.width = 'auto'; svg.style.height = 'auto'; }
+
             els.itemTransformPanel.classList.remove('opacity-50', 'pointer-events-none'); els.activeItemName.textContent = inst.name;
             
-            // Lidar com o painel de edição de texto
             if(inst.isText) {
-                els.textEditGroup.classList.remove('hidden');
-                els.editTextInput.value = inst.textContent;
-                els.editTextFont.value = inst.fontUrl;
+                els.textEditGroup.classList.remove('hidden'); els.editTextInput.value = inst.textContent; els.editTextFont.value = inst.fontUrl;
             } else {
                 els.textEditGroup.classList.add('hidden');
             }
@@ -681,7 +738,7 @@
         }
 
         function triggerUpdate() { if (rawLayers.length > 0) updateGeometryAndMap(); }
-        function triggerCodeUpdate() { if (scaledLayers.length > 0) generateCode(); }
+        function triggerCodeUpdate() { if (scaledLayers.length > 0) { generateCode(); updateStats(); } }
 
         const applyLocalTrans = () => {
             const inst = projectItems.find(i => i.id === activeItemId); if(!inst) return;
@@ -745,8 +802,57 @@
         window.addEventListener('resize', () => { if(scaledLayers.length && !isAnimating) drawStaticPreview(); });
 
         // ==========================================
-        // GESTOR DE CAMADAS UI
+        // GESTOR DE CAMADAS UI E ESTATÍSTICAS
         // ==========================================
+        function updateStats() {
+            if (!scaledLayers || scaledLayers.length === 0) {
+                els.statsDisplay.innerHTML = "Aguardando composição...";
+                return;
+            }
+            
+            let totalPts = 0; let estimatedTimeMs = 0; let traceCount = 0;
+            const mult = 1 / (parseFloat(els.drawSpeed.value) || 2.0);
+            const pause = parseInt(els.drawPause.value) || 35;
+            const turbo = els.turboMode.checked;
+            const warmup = els.warmupMode.checked;
+            let activeLayerCount = 0;
+
+            scaledLayers.forEach(l => {
+                if(!l.visible) return;
+                activeLayerCount++; estimatedTimeMs += l.delay * 1000;
+                l.screenTraces.forEach(tr => {
+                    traceCount++; totalPts += tr.length;
+                    if(turbo) {
+                        let dur = Math.floor((tr.length * 6) * mult);
+                        if(dur < Math.max(40, tr.length * 4)) dur = Math.max(40, tr.length * 4);
+                        if(dur > 60000) dur = 60000;
+                        estimatedTimeMs += dur + 5;
+                    } else {
+                        let dur = Math.floor(Math.max(100, tr.length * 10) * mult);
+                        if(dur < Math.max(80, tr.length * 5)) dur = Math.max(80, tr.length * 5);
+                        if(dur > 60000) dur = 60000;
+                        estimatedTimeMs += dur + pause;
+                    }
+                });
+            });
+
+            if (warmup && activeLayerCount > 0 && scaledLayers[0].screenTraces.length > 0) {
+                const tr = scaledLayers[0].screenTraces[0];
+                const tAq = Math.max(3, Math.min(15, Math.floor(tr.length * 0.25)));
+                let dur = Math.max(300, tAq * 15);
+                estimatedTimeMs += dur + 200;
+            }
+
+            let timeStr = "";
+            if (estimatedTimeMs < 60000) timeStr = (estimatedTimeMs/1000).toFixed(1) + "s";
+            else {
+                let m = Math.floor(estimatedTimeMs / 60000); let s = Math.floor((estimatedTimeMs % 60000) / 1000);
+                timeStr = `${m}m ${s}s`;
+            }
+
+            els.statsDisplay.innerHTML = `Camadas: <b class="text-white">${activeLayerCount}/${rawLayers.length}</b> | Traços Finais: <b class="text-white">${traceCount}</b> | Pontos Mapeados: <b class="text-white">${totalPts}</b> | Tempo: <b class="text-amber-400">~${timeStr}</b>`;
+        }
+
         function renderLayersUI() {
             els.layersList.innerHTML = '';
             if(rawLayers.length === 0) { els.layersList.innerHTML = `<div class="text-center text-xs text-gray-500 mt-8">Sem dados geográficos.</div>`; return; }
@@ -772,7 +878,7 @@
 
                 const divDelay = document.createElement('div'); divDelay.className = 'col-span-3 flex justify-center items-center';
                 const inpDelay = document.createElement('input'); inpDelay.type = 'number'; inpDelay.min = 0; inpDelay.step = 0.5; inpDelay.className = 'w-8 bg-slate-900 border border-slate-600 rounded p-0.5 text-center outline-none text-white text-[10px]'; inpDelay.value = layer.delay;
-                inpDelay.onchange = (e) => { layer.delay = parseFloat(e.target.value) || 0; generateCode(); };
+                inpDelay.onchange = (e) => { layer.delay = parseFloat(e.target.value) || 0; generateCode(); updateStats(); };
                 divDelay.appendChild(inpDelay);
 
                 const divOrder = document.createElement('div'); divOrder.className = 'col-span-2 flex justify-center gap-1';
@@ -801,19 +907,8 @@
         // MOTOR MATEMÁTICO: JS TRANSFORMS -> ECRÃ
         // ==========================================
         function updateGeometryAndMap() {
-            if(projectItems.length === 0) { scaledLayers = []; globalScaledTraces = []; drawStaticPreview(); generateCode(); return; }
+            if(projectItems.length === 0) { scaledLayers = []; globalScaledTraces = []; drawStaticPreview(); generateCode(); updateStats(); return; }
             stopAnimation();
-
-            let gMinX = Infinity, gMinY = Infinity, gMaxX = -Infinity, gMaxY = -Infinity;
-
-            projectItems.forEach(item => {
-                item.basePaths.forEach(tr => {
-                    tr.forEach(p => {
-                        if(p.x < gMinX) gMinX = p.x; if(p.x > gMaxX) gMaxX = p.x;
-                        if(p.y < gMinY) gMinY = p.y; if(p.y > gMaxY) gMaxY = p.y;
-                    });
-                });
-            });
 
             const screenW = parseInt(els.screenW.value) || 1100;
             const screenH = parseInt(els.screenH.value) || 2442;
@@ -825,16 +920,13 @@
             const availW = (screenW * (percent/100)) - (margin * 2);
             const availH = (screenH * (percent/100)) - (margin * 2);
             
-            let tW = gMaxX - gMinX; let tH = gMaxY - gMinY;
-            if(tW <= 0) tW = 1; if(tH <= 0) tH = 1;
-            const finalScale = Math.min(availW / tW, availH / tH) || 1;
+            const finalScale = Math.min(availW / 1000, availH / 1000) || 1;
 
-            const baseOffsetX = ((screenW - (tW * finalScale)) / 2) + (screenW * (pX / 100));
-            const baseOffsetY = ((screenH - (tH * finalScale)) / 2) + (screenH * (pY / 100));
+            const screenCX = (screenW / 2) + (screenW * (pX / 100));
+            const screenCY = (screenH / 2) + (screenH * (pY / 100));
 
             scaledLayers = [];
             globalScaledTraces = [];
-            let ptsFinais = 0; let visCamadas = 0;
             const userStep = parseInt(els.stepPrecision.value) || 3;
             const isCont = els.continuousLine.checked;
 
@@ -854,14 +946,13 @@
 
                     let cleanPath = []; let lastPt = null;
                     tr.forEach(p => {
-                        let px = p.x - cx; let py = p.y - cy;
+                        let px = (p.x - cx) * item.normScale; 
+                        let py = (p.y - cy) * item.normScale;
                         if(item.flipX) px = -px; if(item.flipY) py = -py;
                         px *= item.scaleX; py *= item.scaleY;
                         let rx = px * cos - py * sin; let ry = px * sin + py * cos;
-                        let fx = rx + cx; let fy = ry + cy;
-                        
-                        let sx = Math.floor((fx - gMinX) * finalScale + baseOffsetX + item.x);
-                        let sy = Math.floor((fy - gMinY) * finalScale + baseOffsetY + item.y);
+                        let sx = Math.floor(screenCX + (rx + item.x) * finalScale);
+                        let sy = Math.floor(screenCY + (ry + item.y) * finalScale);
                         
                         if(!lastPt) { cleanPath.push({x: sx, y: sy}); lastPt = {x: sx, y: sy}; }
                         else {
@@ -872,28 +963,49 @@
                     
                     if(tr.length > 1) {
                         let p = tr[tr.length-1];
-                        let px = p.x - cx; let py = p.y - cy;
+                        let px = (p.x - cx) * item.normScale; let py = (p.y - cy) * item.normScale;
                         if(item.flipX) px = -px; if(item.flipY) py = -py;
                         px *= item.scaleX; py *= item.scaleY;
                         let rx = px * cos - py * sin; let ry = px * sin + py * cos;
-                        let fx = rx + cx; let fy = ry + cy;
-                        let sx = Math.floor((fx - gMinX) * finalScale + baseOffsetX + item.x);
-                        let sy = Math.floor((fy - gMinY) * finalScale + baseOffsetY + item.y);
+                        let sx = Math.floor(screenCX + (rx + item.x) * finalScale);
+                        let sy = Math.floor(screenCY + (ry + item.y) * finalScale);
                         cleanPath.push({x: sx, y: sy});
                     }
 
                     if (cleanPath.length > 1) {
-                        if(isCont) currentContinuous.push(...cleanPath);
-                        else { tracesScreen.push(cleanPath); if(layer.visible) { ptsFinais += cleanPath.length; globalScaledTraces.push(cleanPath); } }
+                        if (isCont) {
+                            // JUNÇÃO SEGURA "TRAÇO CONTÍNUO":
+                            // Se a linha anterior terminar EXATAMENTE próxima do início da linha atual, ele cola-as.
+                            // Se a distância física for um pulo grande (ex: olho esquerdo pro olho direito), ele quebra, respeitando a arte!
+                            if (currentContinuous.length > 0) {
+                                let lastP = currentContinuous[currentContinuous.length - 1];
+                                let firstP = cleanPath[0];
+                                let gapSq = (lastP.x - firstP.x) ** 2 + (lastP.y - firstP.y) ** 2;
+                                
+                                if (gapSq > 600) { // Gap maior que ~25 pixels no ecrã real. Fecha o traço atual!
+                                    tracesScreen.push(currentContinuous);
+                                    if(layer.visible) globalScaledTraces.push(currentContinuous);
+                                    currentContinuous = [...cleanPath]; // Começa um novo a partir daqui
+                                } else {
+                                    // Gap minúsculo, podemos encadear o traço como se fosse contínuo
+                                    currentContinuous.push(...cleanPath);
+                                }
+                            } else {
+                                currentContinuous.push(...cleanPath);
+                            }
+                        } 
+                        else { 
+                            // Respeito Máximo da Forma
+                            tracesScreen.push(cleanPath); 
+                            if(layer.visible) globalScaledTraces.push(cleanPath); 
+                        }
                     }
                 });
 
                 if(isCont && currentContinuous.length > 1) {
                     tracesScreen.push(currentContinuous);
-                    if(layer.visible) { ptsFinais += currentContinuous.length; globalScaledTraces.push(currentContinuous); }
+                    if(layer.visible) globalScaledTraces.push(currentContinuous);
                 }
-
-                if(layer.visible) visCamadas++;
 
                 scaledLayers.push({
                     nome: layer.nome, delay: layer.delay, visible: layer.visible, selected: layer.selected,
@@ -901,8 +1013,7 @@
                 });
             });
 
-            els.statsDisplay.innerHTML = `Camadas Ativas: <b class="text-emerald-400">${visCamadas}/${rawLayers.length}</b> | Pontos Mapeados: <b class="text-emerald-400">${ptsFinais}</b>`;
-            drawStaticPreview(); generateCode();
+            drawStaticPreview(); generateCode(); updateStats();
         }
 
         // ==========================================
@@ -1070,7 +1181,7 @@
                 } else {
                     isRecordingGif = false;
                     gifEncoder = null;
-                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Baixar animação';
+                    els.exportGifBtn.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5"></i> Exportar';
                     els.exportGifBtn.disabled = false;
                     lucide.createIcons();
                 }
