@@ -15,12 +15,9 @@
     <style>
         body { background-color: #0f172a; color: #f8fafc; }
         .panel { background-color: #1e293b; border-color: #334155; }
+        /* A grelha de fundo do canvas por CSS foi removida para ser desenhada via JS apenas na área da tela */
         canvas {
-            background-color: #020617;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: transparent;
         }
         #svgHiddenContainer { position: fixed; top: 0; left: 0; opacity: 0.001; z-index: -9999; pointer-events: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -433,6 +430,51 @@
         });
 
         // ==========================================
+        // FUNÇÃO PARTILHADA: DESENHO DO FUNDO E GRELHA
+        // ==========================================
+        function drawBackgroundAndGrid(context, w, h, vScale, vOffsetX, vOffsetY, sw, sh, bScale) {
+            // Preenche o fundo do visualizador inteiro
+            context.fillStyle = "#0f172a"; 
+            context.fillRect(0, 0, w, h);
+
+            context.save();
+            context.translate(vOffsetX, vOffsetY);
+            context.translate(w/2, h/2);
+            context.scale(vScale, vScale);
+            context.translate(-w/2, -h/2);
+
+            const cx = (w - sw * bScale) / 2;
+            const cy = (h - sh * bScale) / 2;
+            const rectW = sw * bScale;
+            const rectH = sh * bScale;
+
+            // Fundo escuro do ecrã do telemóvel
+            context.fillStyle = "#020617";
+            context.fillRect(cx, cy, rectW, rectH);
+
+            // Desenha a grelha APENAS dentro do telemóvel
+            context.save();
+            context.beginPath();
+            context.rect(cx, cy, rectW, rectH);
+            context.clip();
+
+            context.strokeStyle = "rgba(255,255,255,0.04)";
+            context.lineWidth = 1;
+            context.beginPath();
+            for (let x = 0; x <= rectW; x += 20) { context.moveTo(cx + x, cy); context.lineTo(cx + x, cy + rectH); }
+            for (let y = 0; y <= rectH; y += 20) { context.moveTo(cx, cy + y); context.lineTo(cx + rectW, cy + y); }
+            context.stroke();
+            context.restore();
+
+            // Borda brilhante para separar do fundo
+            context.strokeStyle = "rgba(255,255,255,0.15)";
+            context.lineWidth = 1;
+            context.strokeRect(cx, cy, rectW, rectH);
+
+            context.restore();
+        }
+
+        // ==========================================
         // GESTOR DE PROJETO (TEXTO E SVGs)
         // ==========================================
         els.addSvgBtn.onclick = () => els.fileInput.click();
@@ -671,7 +713,7 @@
                 // Remove larguras fixas que causam achatamento (squashing) devido ao override CSS
                 svgEl.removeAttribute('width');
                 svgEl.removeAttribute('height');
-                // Força rendering numa caixa de 1000px quadrada perfeita
+                // Força rendering numa caixa de 1000px quadrada perfeita para não achatar as curvas
                 svgEl.style.width = '1000px';
                 svgEl.style.height = '1000px'; 
 
@@ -1169,10 +1211,11 @@
             const sw = parseInt(els.screenW.value)||1100; const sh = parseInt(els.screenH.value)||2442;
             const bScale = Math.min((els.canvas.width-40)/sw, (els.canvas.height-40)/sh);
             
+            drawBackgroundAndGrid(ctx, els.canvas.width, els.canvas.height, viewScale, viewOffsetX, viewOffsetY, sw, sh, bScale);
+
             ctx.save(); ctx.translate(viewOffsetX, viewOffsetY); ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
             const cx = (els.canvas.width - sw*bScale)/2; const cy = (els.canvas.height - sh*bScale)/2;
             
-            ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.strokeRect(cx, cy, sw*bScale, sh*bScale);
             const anySel = scaledLayers.some(l => l.selected);
 
             scaledLayers.forEach((layer, idx) => {
@@ -1261,22 +1304,7 @@
             const sOffsetX = (els.canvas.width - (sw * bScale)) / 2; const sOffsetY = (els.canvas.height - (sh * bScale)) / 2;
 
             const clearCanvas = () => {
-                ctx.fillStyle = "#020617";
-                ctx.fillRect(0,0,els.canvas.width, els.canvas.height);
-                
-                ctx.save();
-                ctx.strokeStyle = "rgba(255,255,255,0.03)";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                for(let x=0.5; x<els.canvas.width; x+=20) { ctx.moveTo(x,0); ctx.lineTo(x,els.canvas.height); }
-                for(let y=0.5; y<els.canvas.height; y+=20) { ctx.moveTo(0,y); ctx.lineTo(els.canvas.width,y); }
-                ctx.stroke();
-                ctx.restore();
-
-                ctx.save(); ctx.translate(viewOffsetX, viewOffsetY);
-                ctx.translate(els.canvas.width/2, els.canvas.height/2); ctx.scale(viewScale, viewScale); ctx.translate(-els.canvas.width/2, -els.canvas.height/2);
-                ctx.fillStyle = "#1e293b"; ctx.fillRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
-                ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.strokeRect(sOffsetX, sOffsetY, sw*bScale, sh*bScale);
+                drawBackgroundAndGrid(ctx, els.canvas.width, els.canvas.height, viewScale, viewOffsetX, viewOffsetY, sw, sh, bScale);
             };
 
             clearCanvas();
