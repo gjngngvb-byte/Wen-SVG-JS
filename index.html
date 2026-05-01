@@ -25,6 +25,52 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
         .range-sm { height: 4px; accent-color: #6366f1; }
+        
+        /* Sistema de Tooltips (Lupas) */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 6px;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid #334155;
+            font-size: 11px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            white-space: normal;
+        }
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text, .tooltip:active .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans p-2 md:p-4 overflow-x-hidden relative">
@@ -51,29 +97,44 @@
                     <i data-lucide="compass" class="w-6 h-6 text-indigo-400"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-white leading-tight">Auto.js Vector Studio</h1>
+                    <h1 class="text-xl font-bold text-white leading-tight flex items-center flex-wrap gap-2">
+                        Auto.js Vector Studio
+                        <span id="welcomeMessageDisplay" class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 shadow-sm" data-custom-message="">Bem Vindo Jociel</span>
+                    </h1>
                     <p class="text-[10px] text-gray-400 font-medium">Composição de Múltiplos SVGs • Texto Vetorial • Exportação GIF</p>
                 </div>
             </div>
             <div class="flex items-center gap-3 mt-3 md:mt-0 flex-wrap justify-end">
                 <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-blue-500/10 rounded-lg border border-blue-500/20" title="Impede a tela de apagar durante cálculos pesados">
                     <i data-lucide="sun" class="w-3.5 h-3.5 text-blue-400 mr-2"></i>
-                    <span class="text-xs font-medium text-blue-300 mr-2">Tela Acesa</span>
+                    <span class="text-xs font-medium text-blue-300 mr-2 flex items-center">
+                        Tela Acesa
+                        <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-blue-400"></i><span class="tooltip-text">Impede a tela de apagar enquanto processa arquivos SVGs muito grandes e pesados.</span></span>
+                    </span>
                     <input type="checkbox" id="wakeLockMode" checked class="w-3.5 h-3.5 accent-blue-500 rounded cursor-pointer">
                 </label>
                 <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 mr-2"></i>
-                    <span class="text-xs font-medium text-amber-300 mr-2">Turbo</span>
+                    <span class="text-xs font-medium text-amber-300 mr-2 flex items-center">
+                        Turbo
+                        <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-amber-400"></i><span class="tooltip-text">Gera o código usando uma lógica otimizada para o Auto.js desenhar em altíssima velocidade.</span></span>
+                    </span>
                     <input type="checkbox" id="turboMode" class="w-3.5 h-3.5 accent-amber-500 rounded cursor-pointer">
                 </label>
                 <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20" title="Une linhas muito próximas num único traço">
                     <i data-lucide="git-merge" class="w-3.5 h-3.5 text-emerald-400 mr-2"></i>
-                    <span class="text-xs font-medium text-emerald-300 mr-2">Traço Contínuo</span>
+                    <span class="text-xs font-medium text-emerald-300 mr-2 flex items-center">
+                        Traço Contínuo
+                        <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Une linhas muito próximas num único traço para o robô não precisar levantar tanto a caneta.</span></span>
+                    </span>
                     <input type="checkbox" id="continuousLine" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer">
                 </label>
                 <label class="flex items-center justify-between cursor-pointer p-1.5 px-3 bg-slate-700/50 rounded-lg border border-slate-600">
                     <i data-lucide="play-circle" class="w-3.5 h-3.5 text-slate-300 mr-2"></i>
-                    <span class="text-xs font-medium text-slate-300 mr-2">Warmup Inicial</span>
+                    <span class="text-xs font-medium text-slate-300 mr-2 flex items-center">
+                        Warmup Inicial
+                        <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-slate-300"></i><span class="tooltip-text">Faz um pequeno traço falso (invisível ou muito rápido) no começo do desenho para preparar e evitar falhas no primeiro toque do robô.</span></span>
+                    </span>
                     <input type="checkbox" id="warmupMode" checked class="w-3.5 h-3.5 accent-slate-400 rounded cursor-pointer">
                 </label>
             </div>
@@ -98,6 +159,17 @@
                         <i data-lucide="upload-cloud" class="w-4 h-4"></i> Importar SVG
                     </button>
                     <input type="file" id="fileInput" multiple accept=".svg" class="hidden">
+
+                    <!-- Perfil .uny -->
+                    <div class="flex gap-2">
+                        <button id="importUnyBtn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-1 transition-colors">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Importar perfil (.uny)
+                        </button>
+                        <button id="exportUnyBtn" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-1 transition-colors">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i> Exportar perfil (.uny)
+                        </button>
+                    </div>
+                    <input type="file" id="unyFileInput" accept=".uny" class="hidden">
                     
                     <!-- Novo Módulo de Texto -->
                     <div class="pt-3 border-t border-slate-700 space-y-2">
@@ -154,16 +226,40 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 text-xs text-gray-400">
-                        <div><label class="flex justify-between mb-1"><span>Pos X (Local)</span><span id="itemXVal" class="text-indigo-300">0</span></label><input type="range" id="itemX" min="-2000" max="2000" value="0" class="w-full range-sm"></div>
-                        <div><label class="flex justify-between mb-1"><span>Pos Y (Local)</span><span id="itemYVal" class="text-indigo-300">0</span></label><input type="range" id="itemY" min="-2000" max="2000" value="0" class="w-full range-sm"></div>
+                        <div>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Pos X (Local) <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Move apenas o elemento selecionado horizontalmente no seu próprio eixo.</span></span></span>
+                                <span id="itemXVal" class="text-indigo-300">0</span>
+                            </label>
+                            <input type="range" id="itemX" min="-2000" max="2000" value="0" class="w-full range-sm">
+                        </div>
+                        <div>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Pos Y (Local) <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Move apenas o elemento selecionado verticalmente no seu próprio eixo.</span></span></span>
+                                <span id="itemYVal" class="text-indigo-300">0</span>
+                            </label>
+                            <input type="range" id="itemY" min="-2000" max="2000" value="0" class="w-full range-sm">
+                        </div>
                         <div class="col-span-2">
-                            <label class="flex justify-between mb-1"><span class="font-bold text-indigo-400">Escala Geral</span><span id="itemScaleVal" class="text-indigo-400 font-bold">1.0x</span></label>
+                            <label class="flex justify-between mb-1">
+                                <span class="font-bold text-indigo-400 flex items-center gap-1">Escala Geral <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Aumenta ou diminui o tamanho do elemento mantendo as proporções originais equilibradas.</span></span></span>
+                                <span id="itemScaleVal" class="text-indigo-400 font-bold">1.0x</span>
+                            </label>
                             <input type="range" id="itemScale" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-indigo-500">
                         </div>
-                        <div><label class="block mb-1">Escala X</label><input type="range" id="itemScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm"></div>
-                        <div><label class="block mb-1">Escala Y</label><input type="range" id="itemScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm"></div>
+                        <div>
+                            <label class="block mb-1 flex items-center gap-1">Escala X <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Aumenta ou diminui o tamanho do elemento exclusivamente na horizontal.</span></span></label>
+                            <input type="range" id="itemScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm">
+                        </div>
+                        <div>
+                            <label class="block mb-1 flex items-center gap-1">Escala Y <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Aumenta ou diminui o tamanho do elemento exclusivamente na vertical.</span></span></label>
+                            <input type="range" id="itemScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm">
+                        </div>
                         <div class="col-span-2">
-                            <label class="flex justify-between mb-1"><span>Rotação</span><span id="itemRotVal">0°</span></label>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Rotação <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-indigo-400"></i><span class="tooltip-text">Gira o elemento ativo em torno de seu próprio centro geométrico (de 0º até 360º).</span></span></span>
+                                <span id="itemRotVal">0°</span>
+                            </label>
                             <input type="range" id="itemRot" min="0" max="360" value="0" class="w-full range-sm">
                         </div>
                     </div>
@@ -183,18 +279,42 @@
                     
                     <!-- Novas Transformações Globais -->
                     <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-700">
-                        <div><label class="flex justify-between mb-1"><span>Pos X (Global)</span><span id="globalXVal" class="text-emerald-300">0</span></label><input type="range" id="globalX" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
-                        <div><label class="flex justify-between mb-1"><span>Pos Y (Global)</span><span id="globalYVal" class="text-emerald-300">0</span></label><input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500"></div>
+                        <div>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Pos X (Global) <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Move todo o projeto como um conjunto único horizontalmente na tela.</span></span></span>
+                                <span id="globalXVal" class="text-emerald-300">0</span>
+                            </label>
+                            <input type="range" id="globalX" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500">
+                        </div>
+                        <div>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Pos Y (Global) <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Move todo o projeto como um conjunto único verticalmente na tela.</span></span></span>
+                                <span id="globalYVal" class="text-emerald-300">0</span>
+                            </label>
+                            <input type="range" id="globalY" min="-2000" max="2000" value="0" class="w-full range-sm accent-emerald-500">
+                        </div>
                         
                         <div class="col-span-2">
-                            <label class="flex justify-between mb-1"><span class="font-bold text-emerald-400">Escala Geral Global</span><span id="globalScaleVal" class="text-emerald-400 font-bold">1.0x</span></label>
+                            <label class="flex justify-between mb-1">
+                                <span class="font-bold text-emerald-400 flex items-center gap-1">Escala Geral Global <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Altera o tamanho do conjunto inteiro sem deformar as proporções ou as posições relativas dos arquivos misturados.</span></span></span>
+                                <span id="globalScaleVal" class="text-emerald-400 font-bold">1.0x</span>
+                            </label>
                             <input type="range" id="globalScale" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500">
                         </div>
-                        <div><label class="block mb-1">Escala X Global</label><input type="range" id="globalScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500"></div>
-                        <div><label class="block mb-1">Escala Y Global</label><input type="range" id="globalScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500"></div>
+                        <div>
+                            <label class="block mb-1 flex items-center gap-1">Escala X Global <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Estica ou encolhe todos os elementos de uma vez, apenas na direção X.</span></span></label>
+                            <input type="range" id="globalScaleX" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block mb-1 flex items-center gap-1">Escala Y Global <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Estica ou encolhe todos os elementos de uma vez, apenas na direção Y.</span></span></label>
+                            <input type="range" id="globalScaleY" min="0.1" max="5" step="0.1" value="1" class="w-full range-sm accent-emerald-500">
+                        </div>
                         
                         <div class="col-span-2">
-                            <label class="flex justify-between mb-1"><span>Rotação Global</span><span id="globalRotVal">0°</span></label>
+                            <label class="flex justify-between mb-1">
+                                <span class="flex items-center gap-1">Rotação Global <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-emerald-400"></i><span class="tooltip-text">Gira todo o mosaico do projeto na tela a partir do eixo central.</span></span></span>
+                                <span id="globalRotVal">0°</span>
+                            </label>
                             <input type="range" id="globalRot" min="0" max="360" value="0" class="w-full range-sm accent-emerald-500">
                         </div>
 
@@ -206,15 +326,45 @@
 
                     <!-- Definições Originais de Robô -->
                     <div class="grid grid-cols-2 gap-2 pt-1">
-                        <div><label class="block mb-1">Ecrã X</label><input type="number" id="screenW" value="1100" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
-                        <div><label class="block mb-1">Ecrã Y</label><input type="number" id="screenH" value="2442" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
+                        <div><label class="block mb-1 flex items-center gap-1">Ecrã X <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-gray-400"></i><span class="tooltip-text">A largura real em pixels da tela do dispositivo onde o auto.js vai reproduzir (ex: 1080).</span></span></label><input type="number" id="screenW" value="1100" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
+                        <div><label class="block mb-1 flex items-center gap-1">Ecrã Y <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-gray-400"></i><span class="tooltip-text">A altura real em pixels da tela do dispositivo alvo (ex: 2400).</span></span></label><input type="number" id="screenH" value="2442" class="w-full bg-slate-800 border border-slate-600 rounded p-1.5 outline-none text-white"></div>
                     </div>
 
-                    <div><label class="flex justify-between mb-1"><span>Ocupação Total</span><span id="percentValue">70%</span></label><input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full range-sm"></div>
-                    <div><label class="flex justify-between mb-1"><span>Margem Ecrã</span><span id="marginValue">20px</span></label><input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full range-sm"></div>
-                    <div><label class="flex justify-between mb-1 text-purple-400 font-bold"><span>Velocidade</span><span id="speedValue">2.0x</span></label><input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full range-sm accent-purple-500"></div>
-                    <div><label class="flex justify-between mb-1 text-pink-400"><span>Pausa Levantar</span><span id="pauseValue">35ms</span></label><input type="range" id="drawPause" min="10" max="500" step="5" value="35" class="w-full range-sm accent-pink-500"></div>
-                    <div><label class="flex justify-between mb-1 text-sky-400"><span>Qualidade Leitura</span><span id="precisionValue">3px</span></label><input type="range" id="stepPrecision" min="1" max="20" value="3" class="w-full range-sm accent-sky-500"></div>
+                    <div>
+                        <label class="flex justify-between mb-1">
+                            <span class="flex items-center gap-1">Ocupação Total <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-gray-400"></i><span class="tooltip-text">Em quantos porcentos (de 10 a 100) da tela inteira o projeto deve ser espalhado ou contido.</span></span></span>
+                            <span id="percentValue">70%</span>
+                        </label>
+                        <input type="range" id="drawPercent" min="10" max="100" value="70" class="w-full range-sm">
+                    </div>
+                    <div>
+                        <label class="flex justify-between mb-1">
+                            <span class="flex items-center gap-1">Margem Ecrã <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-gray-400"></i><span class="tooltip-text">Margem de recuo (em pixels) nas bordas da tela para impedir que o desenho seja feito até ao limite e cause erros de clique.</span></span></span>
+                            <span id="marginValue">20px</span>
+                        </label>
+                        <input type="range" id="drawMargin" min="0" max="200" value="20" class="w-full range-sm">
+                    </div>
+                    <div>
+                        <label class="flex justify-between mb-1 text-purple-400 font-bold">
+                            <span class="flex items-center gap-1">Velocidade <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-purple-400"></i><span class="tooltip-text">Multiplicador da agilidade do robô no Auto.js, controlando o quão rápido o dedo artificial desliza para realizar o traço.</span></span></span>
+                            <span id="speedValue">2.0x</span>
+                        </label>
+                        <input type="range" id="drawSpeed" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full range-sm accent-purple-500">
+                    </div>
+                    <div>
+                        <label class="flex justify-between mb-1 text-pink-400">
+                            <span class="flex items-center gap-1">Pausa Levantar <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-pink-400"></i><span class="tooltip-text">Em milissegundos, dita o tempo que o Auto.js espera cada vez que acaba um traço (levanta o dedo) antes de começar a baixar para o próximo.</span></span></span>
+                            <span id="pauseValue">35ms</span>
+                        </label>
+                        <input type="range" id="drawPause" min="10" max="500" step="5" value="35" class="w-full range-sm accent-pink-500">
+                    </div>
+                    <div>
+                        <label class="flex justify-between mb-1 text-sky-400">
+                            <span class="flex items-center gap-1">Qualidade Leitura <span class="tooltip"><i data-lucide="search" class="w-3 h-3 text-sky-400"></i><span class="tooltip-text">Nível de detalhes das curvas (em pixels entre pontos). Valores menores (ex: 1 ou 2) deixam curvas precisas, mas scripts pesados; valores maiores sacrificam exatidão para ganho de fluidez.</span></span></span>
+                            <span id="precisionValue">3px</span>
+                        </label>
+                        <input type="range" id="stepPrecision" min="1" max="20" value="3" class="w-full range-sm accent-sky-500">
+                    </div>
                 </div>
             </div>
 
@@ -343,6 +493,12 @@
         let globalFlipX = false;
         let globalFlipY = false;
 
+        // Configurações avançadas ocultas do .uny
+        let advancedSettings = {
+            experimental: {},
+            hiddenFlags: {}
+        };
+
         // DOM Els
         const els = {
             addSvgBtn: document.getElementById('addSvgBtn'), fileInput: document.getElementById('fileInput'),
@@ -391,7 +547,13 @@
             statusMsg: document.getElementById('statusMsg'), 
             
             jsFileName: document.getElementById('jsFileName'),
-            resetGeoBtn: document.getElementById('resetGeoBtn')
+            resetGeoBtn: document.getElementById('resetGeoBtn'),
+            
+            // Novos elementos UNY
+            importUnyBtn: document.getElementById('importUnyBtn'),
+            exportUnyBtn: document.getElementById('exportUnyBtn'),
+            unyFileInput: document.getElementById('unyFileInput'),
+            welcomeMessageDisplay: document.getElementById('welcomeMessageDisplay')
         };
         const ctx = els.canvas.getContext('2d');
 
@@ -661,6 +823,122 @@
             if(activeItemId === id) activeItemId = projectItems.length ? projectItems[0].id : null;
             renderProjectItems(); renderLayersUI(); updateGeometryAndMap();
         }
+
+        // ==========================================
+        // SISTEMA DE PERFIL PORTÁTIL (.uny)
+        // ==========================================
+        els.exportUnyBtn.onclick = () => {
+            const profile = {
+                projectName: "Auto.js Vector Studio",
+                elements: { projectItems, rawLayers },
+                settings: {
+                    globalX: parseFloat(els.globalX.value),
+                    globalY: parseFloat(els.globalY.value),
+                    globalScale: parseFloat(els.globalScale.value),
+                    globalScaleX: parseFloat(els.globalScaleX.value),
+                    globalScaleY: parseFloat(els.globalScaleY.value),
+                    globalRot: parseFloat(els.globalRot.value),
+                    globalFlipX: globalFlipX,
+                    globalFlipY: globalFlipY,
+                    screenW: parseInt(els.screenW.value),
+                    screenH: parseInt(els.screenH.value),
+                    drawPercent: parseInt(els.drawPercent.value),
+                    drawMargin: parseInt(els.drawMargin.value),
+                    drawSpeed: parseFloat(els.drawSpeed.value),
+                    drawPause: parseInt(els.drawPause.value),
+                    stepPrecision: parseInt(els.stepPrecision.value),
+                    wakeLockMode: els.wakeLockMode.checked,
+                    turboMode: els.turboMode.checked,
+                    continuousLine: els.continuousLine.checked,
+                    warmupMode: els.warmupMode.checked
+                },
+                advanced: advancedSettings,
+                welcomeMessage: els.welcomeMessageDisplay.dataset.customMessage || ""
+            };
+            
+            const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'meu_perfil.uny';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        els.importUnyBtn.onclick = () => els.unyFileInput.click();
+        els.unyFileInput.onchange = async (e) => {
+            if(!e.target.files.length) return;
+            const file = e.target.files[0];
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                // Validação Estrutural
+                if(!data.elements || !data.settings) throw new Error("Arquivo .uny inválido ou corrompido.");
+                
+                // Restaura Elementos (SVGs e Layers)
+                projectItems = data.elements.projectItems || [];
+                rawLayers = data.elements.rawLayers || [];
+                activeItemId = projectItems.length > 0 ? projectItems[0].id : null;
+                
+                // Restaura Configurações UI
+                const s = data.settings;
+                els.globalX.value = s.globalX || 0;
+                els.globalY.value = s.globalY || 0;
+                els.globalScale.value = s.globalScale || 1;
+                els.globalScaleX.value = s.globalScaleX || 1;
+                els.globalScaleY.value = s.globalScaleY || 1;
+                els.globalRot.value = s.globalRot || 0;
+                globalFlipX = !!s.globalFlipX;
+                globalFlipY = !!s.globalFlipY;
+                
+                els.screenW.value = s.screenW || 1100;
+                els.screenH.value = s.screenH || 2442;
+                els.drawPercent.value = s.drawPercent || 70;
+                els.drawMargin.value = s.drawMargin || 20;
+                els.drawSpeed.value = s.drawSpeed || 2.0;
+                els.drawPause.value = s.drawPause || 35;
+                els.stepPrecision.value = s.stepPrecision || 3;
+                
+                els.wakeLockMode.checked = !!s.wakeLockMode;
+                els.turboMode.checked = !!s.turboMode;
+                els.continuousLine.checked = !!s.continuousLine;
+                els.warmupMode.checked = s.warmupMode !== undefined ? s.warmupMode : true;
+
+                // Restaura Valores Visuais (Labels)
+                els.globalXVal.textContent = els.globalX.value + 'px';
+                els.globalYVal.textContent = els.globalY.value + 'px';
+                els.globalScaleVal.textContent = parseFloat(els.globalScale.value).toFixed(1) + 'x';
+                els.globalRotVal.textContent = els.globalRot.value + '°';
+                els.percentValue.textContent = els.drawPercent.value + '%';
+                els.marginValue.textContent = els.drawMargin.value + 'px';
+                els.speedValue.textContent = parseFloat(els.drawSpeed.value).toFixed(1) + 'x';
+                els.pauseValue.textContent = els.drawPause.value + 'ms';
+                els.precisionValue.textContent = els.stepPrecision.value + 'px';
+                
+                els.globalFlipXBtn.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${globalFlipX ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`;
+                els.globalFlipYBtn.className = `flex-1 py-1.5 rounded text-xs flex justify-center gap-1 transition-colors ${globalFlipY ? 'bg-emerald-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-gray-300'}`;
+
+                // Restaura Configs Ocultas
+                advancedSettings = data.advanced || { experimental: {}, hiddenFlags: {} };
+                
+                // Mensagem de Boas-Vindas
+                const msg = (data.welcomeMessage && typeof data.welcomeMessage === 'string' && data.welcomeMessage.trim() !== "") ? data.welcomeMessage : "Bem Vindo Jociel";
+                els.welcomeMessageDisplay.textContent = msg;
+                els.welcomeMessageDisplay.dataset.customMessage = msg !== "Bem Vindo Jociel" ? msg : "";
+
+                // Força Renderização Total
+                renderProjectItems();
+                renderLayersUI();
+                updateGeometryAndMap();
+                
+            } catch(err) {
+                console.error(err);
+                alert("Falha ao importar o arquivo .uny");
+            } finally {
+                e.target.value = '';
+            }
+        };
 
         // ==========================================
         // EXTRACÇÃO DE BASE E DETEÇÃO DE SALTOS (DOM -> JS)
